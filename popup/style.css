@@ -1,0 +1,6 @@
+#loading, #no-vids, #vids {
+  display: none;
+}
+body.loading #loading, body.no-vids #no-vids, body.vids #vids {
+  display: block;
+}
