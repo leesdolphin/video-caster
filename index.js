@@ -64,6 +64,7 @@ var playback_url_promise = new Promise(function (purl_resolve, purl_reject) {
         }
       }
       var url = qual_to_url[default_qual]
+      url = url.replace('http://', 'https://')
       return resolveRedirects(url).then(purl_resolve)
     }).catch(purl_reject)
   })
