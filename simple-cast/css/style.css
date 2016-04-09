@@ -1,0 +1,139 @@
+div.contributors > div {
+  display:inline-block;
+  padding: 13px;
+  vertical-align: top;
+}
+div.contributors > div > a {
+  /* Make the overlays work. */
+  position: relative;
+  display:inline-block;
+  /* Make them look nice. */
+  line-height: 0;
+}
+
+div.non-code div.overlay {
+  background-image: url(../img/Clapping.png);
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-size: 36px auto;
+  width: 100%;
+  height: 100%;
+  /* Make it overlay the image. */
+  position: absolute;
+  top: 0;
+}
+
+div.contributors > div > div {
+  text-align: center;
+  width: 120px;
+  padding: 5px
+}
+
+footer {
+  padding-top: 40px
+}
+.intro-section {
+  margin-bottom: 50px;
+}
+
+.row {
+  padding-top: 10px
+}
+
+.section-heading {
+  color:white;
+  padding-top: 100px;
+  text-align: center;
+  font-weight: bold;
+}
+.section-heading #repo-name a, .header-link a {
+  color: white;
+  text-decoration: none;
+}
+.section-heading #repo-name a:hover, .header-link a:hover {
+  text-decoration: underline;
+}
+
+.center-row {
+  text-align: center;
+}
+
+.buttom-img {
+  max-height: 36px;
+  box-sizing: border-box;
+  padding: 5px 0;
+  padding-right: 8px;
+  float: left;
+}
+
+footer {
+  padding-top: 2rem;
+  margin-top: 2rem;
+  border-top: solid 1px #eff0f1;
+  color: #819198;}
+
+@media screen and (min-width: 64em) {
+  .site-footer {
+    font-size: 1rem; } }
+
+@media screen and (min-width: 42em) and (max-width: 64em) {
+  .site-footer {
+    font-size: 1rem; } }
+
+@media screen and (max-width: 42em) {
+  .site-footer {
+    font-size: 0.9rem; } }
+
+.header-link {
+  color: white;
+  padding: 0 5px;
+  font-size: 90%;
+}
+
+.slim-icon-bar ul li {
+  border-bottom: 1px solid #eee;
+  margin: 0;
+  padding: 0;
+}
+.slim-icon-bar ul li>* {
+
+}
+.slim-icon-bar ul:last-child li:last-child {
+  border-bottom: 0;
+}
+.slim-icon-bar ul li.disabled>*, .slim-icon-bar ul li>*[disabled] {
+  color: #999;
+}
+
+/* Larger than phone */
+@media (min-width: 550px) {
+  .slim-icon-bar {
+    border-bottom: 1px solid #eee;
+  }
+  .slim-icon-bar ul {
+    display: inline-block;
+  }
+  .slim-icon-bar ul li {
+    border: 0;
+    display: inline-block;
+  }
+  .slim-icon-bar ul li>* {
+    padding: 1rem;
+    display: inline-block;
+  }
+  .slim-icon-bar ul.left-menu li {
+    border-right: 1px solid #eee;
+  }
+  .slim-icon-bar ul.left-menu li:first-child {
+    border-left: 1px solid #eee;
+  }
+  .slim-icon-bar ul.right-menu {
+    float: right;
+  }
+  .slim-icon-bar ul.right-menu li {
+    border-left: 1px solid #eee;
+  }
+  .slim-icon-bar ul.right-menu li:last-child {
+    border-right: 1px solid #eee;
+  }
+}
