@@ -68,8 +68,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 	exports.entrypoint = undefined;
 	
-	__webpack_require__(2);
-	
 	var _react = __webpack_require__(3);
 	
 	var _react2 = _interopRequireDefault(_react);
@@ -77,6 +75,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _reactDom = __webpack_require__(34);
 	
 	var _reactDom2 = _interopRequireDefault(_reactDom);
+	
+	var _reactRedux = __webpack_require__(189);
 	
 	var _root = __webpack_require__(168);
 	
@@ -92,297 +92,87 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
-	function reducer(state, event) {
+	var api_available_reducer = function api_available_reducer() {
+	  var state = arguments.length <= 0 || arguments[0] === undefined ? false : arguments[0];
+	  var event = arguments[1];
+	
 	  switch (event.type) {
 	    case chromecast_events.API_AVAILABLE:
 	    case chromecast_events.API_UNAVAILABLE:
-	      return Object.assign({}, state, {
-	        api_available: event.type === chromecast_events.API_AVAILABLE
-	      });
-	    case chromecast_events.SESSION_CONNECTED:
-	      return Object.assign({}, state, {
-	        session: event.session
-	      });
+	      return event.type === chromecast_events.API_AVAILABLE;
 	    default:
-	      console.log('Event', event);
+	      return state;
 	  }
-	  return state;
-	}
+	};
+	var dicovering_reducer = function dicovering_reducer() {
+	  var state = arguments.length <= 0 || arguments[0] === undefined ? false : arguments[0];
+	  var event = arguments[1];
+	
+	  switch (event.type) {
+	    case chromecast_events.DISCOVERING:
+	      return true;
+	    case chromecast_events.RECEIVER_AVAILABLE:
+	    case chromecast_events.RECEIVER_UNAVAILABLE:
+	      return false;
+	    default:
+	      return state;
+	  }
+	};
+	var session_reducer = function session_reducer() {
+	  var state = arguments.length <= 0 || arguments[0] === undefined ? false : arguments[0];
+	  var event = arguments[1];
+	
+	  switch (event.type) {
+	    case chromecast_events.SESSION_CONNECTED:
+	      return event.session;
+	    case chromecast_events.SESSION_DISCONNECTED:
+	      return false;
+	    default:
+	      return state;
+	  }
+	};
+	var media_reducer = function media_reducer() {
+	  var state = arguments.length <= 0 || arguments[0] === undefined ? false : arguments[0];
+	  var event = arguments[1];
+	
+	  switch (event.type) {
+	    case chromecast_events.MEDIA_LOADED:
+	    case chromecast_events.MEDIA_STATUS_UPDATED:
+	      return event.media;
+	    case chromecast_events.SESSION_DISCONNECTED:
+	      return false;
+	    default:
+	      return state;
+	  }
+	};
+	var reducer = (0, _redux.combineReducers)({
+	  api_available: api_available_reducer,
+	  session: session_reducer,
+	  media: media_reducer,
+	  discovering: dicovering_reducer
+	});
 	
 	function entrypoint(domElm) {
 	  var middleware = [(0, _reactReduxChromecastSender.castSender)('CC1AD845', // AppId - chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID
 	  'urn:x-cast:com.google.cast.media' // namespace for communication (namespace must match on receiver)
-	  )];
+	  ), (0, _reactReduxChromecastSender.castMediaManager)()];
 	  var store = _redux.applyMiddleware.apply(undefined, middleware)(_redux.createStore)(reducer, {});
-	  console.log(store.getState());
-	  store.subscribe(function () {
-	    return console.log(store.getState());
-	  });
-	  return _reactDom2.default.render(_react2.default.createElement(_root.Main, { store: true }), domElm);
+	  setInterval(function () {
+	    if (store.getState()['media']) {
+	      store.getState()['media'].getStatus(null, function () {}, function () {});
+	    }
+	  }, 1000);
+	  return _reactDom2.default.render(_react2.default.createElement(
+	    _reactRedux.Provider,
+	    { store: store },
+	    _react2.default.createElement(_root.Main, null)
+	  ), domElm);
 	}
 	
 	exports.entrypoint = entrypoint;
 
 /***/ },
-/* 2 */
-/***/ function(module, exports) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	/* eslint no-var: 0 */
-	/* eslint-env jquery */
-	
-	var linkRe = /<([^>]+)>; rel="(\w+)"/;
-	
-	function combine() {
-	  var arr = [];
-	  Array.prototype.forEach.call(arguments, function (arg) {
-	    Array.prototype.push.apply(arr, arg);
-	  });
-	  return arr;
-	}
-	function parseLinks(linkHeader) {
-	  var links = {};
-	  linkHeader.split(', ').forEach(function (linkPart) {
-	    var re = linkPart.match(linkRe);
-	    if (re) {
-	      var url = re[1];
-	      var rel = re[2];
-	      links[rel] = url;
-	    }
-	  });
-	  return links;
-	}
-	function filterContributors(listOfContributors, usernameStore) {
-	  var filteredList = [];
-	  // Only send unique contributors out.
-	  listOfContributors.forEach(function (contributor) {
-	    if (!usernameStore[contributor.login]) {
-	      usernameStore[contributor.login] = true;
-	      filteredList.push(contributor);
-	    }
-	  });
-	  return filteredList;
-	}
-	// Functions using jQuery.
-	
-	function whenAll(arrayOfPromises) {
-	  // A warapper around $.when that takes an array and returns a promise the resolves with an
-	  //  array.
-	  return $.when.apply($, arrayOfPromises).then(function () {
-	    // Convert the arguments into an array.
-	    return Array.prototype.slice.call(arguments);
-	  });
-	}
-	function when() /* ... */{
-	  return $.when.apply($, arguments);
-	}
-	function resolvedPromise(value) {
-	  // It's hacky but it appears to be the best way to get a resolved promise.
-	  return $.Deferred().resolve(value).promise();
-	}
-	
-	function Labhr(host, cachedRequest) {
-	  if (this.constructor !== Labhr) {
-	    // Handle people calling this function without 'new'.
-	    return new Labhr(host, cachedRequest);
-	  }
-	  this.host = host;
-	  this.cachedRequest = cachedRequest;
-	}
-	exports.default = Labhr;
-	
-	
-	Labhr.prototype.load = function (repo, notifyCallback) {
-	  var codeContribUsernames = {};
-	  var allCodeContributors = [];
-	  var nonCodeContribUsernames = {};
-	  var allNonCodeContributors = [];
-	  var allNonCodeOnlyContributors = [];
-	  function codeContribCB(listOfCodeContributors) {
-	    var codeContribs = filterContributors(listOfCodeContributors, codeContribUsernames);
-	    allCodeContributors = combine(allCodeContributors, codeContribs);
-	    notifyCallback({
-	      'codeContributors': codeContribs
-	    });
-	  }
-	  function nonCodeContribCB(listOfNonCodeContributors) {
-	    var nonCodeContribs = filterContributors(listOfNonCodeContributors, nonCodeContribUsernames);
-	    allNonCodeContributors = combine(allNonCodeContributors, nonCodeContribs);
-	    // Make a copy in case notifyCallback does something horrible.
-	    var nonCodeContribs_copy = nonCodeContribs.slice(0);
-	    // This list is for all contributors who have worked on issues(or PRs).
-	    // There may be overlap between this list and the code contributors list.
-	    notifyCallback({
-	      'nonCodeContributors': nonCodeContribs
-	    });
-	    // We need to wait until we have all the code contributors before
-	    //  sending the non-code only contributors.
-	    listOfCodeContributors.then(function () {
-	      // Remove any contributors who are code contributors
-	      var nonCodeOnlyContribs = filterContributors(nonCodeContribs_copy, codeContribUsernames);
-	      allNonCodeOnlyContributors = combine(allNonCodeOnlyContributors, nonCodeOnlyContribs);
-	      notifyCallback({
-	        'nonCodeOnlyContributors': nonCodeOnlyContribs
-	      });
-	    });
-	  }
-	  var listOfCodeContributors = this.codeContributionLoader(repo, codeContribCB);
-	  return when(listOfCodeContributors, this.issueContributionLoader(repo, nonCodeContribCB)).then(function (codeContrib, issueContrib) {
-	    return {
-	      'nonCodeContributors': allNonCodeContributors,
-	      'nonCodeOnlyContributors': allNonCodeOnlyContributors,
-	      'codeContributors': allCodeContributors
-	    };
-	  });
-	};
-	
-	// Loading extended user information
-	
-	Labhr.prototype.getUserExtendedInfo = function (userInfo) {
-	  return this.cachedRequest(userInfo.url).then(function (json, status, xhr) {
-	    return json;
-	  });
-	};
-	
-	Labhr.prototype.getAllUserExtendedInfo = function (listOfUsers) {
-	  var that = this;
-	  var allPromises = [];
-	  listOfUsers.forEach(function (user) {
-	    allPromises.push(that.getUserExtendedInfo(user));
-	  });
-	  // Return a promise that, when resolved, will give an array containing
-	  //  all the users and their extending information.
-	  return whenAll(allPromises);
-	};
-	
-	// Loading the users from contributors list and issues.
-	
-	Labhr.prototype.codeContributionLoader = function (repo, contributorCallback) {
-	  /**
-	   * repo: A string containing the repo to load the contributors from.
-	   * contributorCallback: A function that recieves a list of contributors.
-	   *                      This list may not be complete or unique.
-	   */
-	  var that = this;
-	  var baseUrl = this.host + '/repos/' + repo + '/contributors?pageSize=30';
-	  return this.autoPaginate(baseUrl, function (listOfContributors) {
-	    return that.getAllUserExtendedInfo(listOfContributors).then(contributorCallback);
-	  });
-	};
-	
-	Labhr.prototype.issueContributionLoader = function (repo, contributorCallback) {
-	  /**
-	   * repo: A string containing the repo to load the contributors from.
-	   * contributorCallback: A function that recieves a list of contributors.
-	   *                      This list may not be complete or unique.
-	   */
-	  var that = this;
-	  var baseUrl = this.host + '/repos/' + repo + '/issues?pageSize=30&state=all';
-	  return this.autoPaginate(baseUrl, function (listOfIssues) {
-	    // We need to do 2 things with this list of issues.
-	    //  - Load the comments for each issue
-	    //  - Load the user that created the issue.
-	    var creators = [];
-	    var commentLoadingPromises = [];
-	    listOfIssues.forEach(function (issue) {
-	      creators.push(issue.user);
-	      commentLoadingPromises.push(that._issueCommenterLoader(issue.comments_url, contributorCallback));
-	    });
-	    var creatorsPromise = that.getAllUserExtendedInfo(creators).then(contributorCallback);
-	    var commentsPromise = whenAll(commentLoadingPromises);
-	    return when(creatorsPromise, commentsPromise);
-	  });
-	};
-	
-	Labhr.prototype._issueCommenterLoader = function (commentsUrl, contributorCallback) {
-	  /**
-	   * An internal method to load all the commenters from a single issue.
-	   *
-	   * repo: A string containing the repo to load the contributors from.
-	   * contributorCallback: A function that recieves a list of contributors.
-	   *                      This list may not be complete or unique.
-	   */
-	  var that = this;
-	  return this.autoPaginate(commentsUrl, function (commentsPage) {
-	    var commenters = [];
-	    commentsPage.forEach(function (comment) {
-	      commenters.push(comment.user);
-	    });
-	    return that.getAllUserExtendedInfo(commenters).then(function (fullUserInformation) {
-	      // Once we load the information, pass it on to the callback.
-	      contributorCallback(fullUserInformation);
-	    });
-	  });
-	};
-	
-	// Pagination helpers.
-	
-	Labhr.prototype.doPagination = function (sharedCache, url, direction, requestParser) {
-	  /**
-	   * Handles recursively fetching pages in the direction given.
-	   *
-	   * sharedCache: A dictionary that allows multiple `doPagination` calls to
-	   *  work alongside each other without accidently duplicating items in the combined results.
-	   */
-	  var that = this;
-	  if (!url || sharedCache[url]) {
-	    // This can probably be done nicer.
-	    return resolvedPromise([]);
-	  } else {
-	    sharedCache[url] = true;
-	    return this.cachedRequest(url).then(function (json, status, response) {
-	      var links = parseLinks(response.getResponseHeader('Link'));
-	      var next_url = links[direction];
-	      return when(requestParser(json), that.doPagination(sharedCache, next_url, direction, requestParser));
-	    });
-	  }
-	};
-	
-	Labhr.prototype.autoPaginate = function (baseUrl, requestParser) {
-	  /**
-	   * baseUrl: The first URL to request. Other page's URLs are taken from the Link header.
-	   * requestParser: A function that performs some additional processing and
-	   *                returns a promise or an object. Returned promises will
-	   *                be waited on before this function returns.
-	   */
-	  requestParser = requestParser || function (request) {
-	    return request;
-	  };
-	  var that = this;
-	  return that.cachedRequest(baseUrl).then(function (json, status, response) {
-	    var linkHeader = response.getResponseHeader('Link');
-	    if (linkHeader) {
-	      var links = parseLinks(linkHeader);
-	      var paginationCache = {};
-	      return when(requestParser(json), that.doPagination(paginationCache, links['next'], 'next', requestParser), that.doPagination(paginationCache, links['last'], 'prev', requestParser));
-	    } else {
-	      return requestParser(json);
-	    }
-	  });
-	};
-	
-	// Example `cachedRequest` implementation using jQuery.
-	//
-	// var cache = {}
-	// function cachedRequest (url) {
-	//   if (cache[url]) {
-	//     return cache[url]
-	//   } else {
-	//     var response = cache[url] = $.ajax(url, {
-	//       method: 'GET',
-	//       headers: {
-	//         'Authorization': 'Basic <<Your Auth Here!>>'
-	//       }
-	//     })
-	//     return response
-	//   }
-	// }
-
-/***/ },
+/* 2 */,
 /* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -20313,51 +20103,39 @@ return /******/ (function(modules) { // webpackBootstrap
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.Main = undefined;
+	exports.Main = exports.MainView = undefined;
 	
 	var _react = __webpack_require__(3);
 	
 	var _react2 = _interopRequireDefault(_react);
 	
+	var _reactRedux = __webpack_require__(189);
+	
+	var _chromecast = __webpack_require__(187);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
-	// import { ChromecastSessionManager } from './chromecast.jsx'
 	// import { Header } from './header.jsx'
 	
 	console.log(Promise); /* eslint-env es6*/
 	
 	
-	var Main = _react2.default.createClass({
-	  displayName: 'Main',
-	  getInitialState: function getInitialState() {
-	    // this.chromecast_manager = new ChromecastSessionManager(this.chromecast_update)
-	    return {
-	      'chromecast_session': null
-	    };
-	  },
+	var MainView = exports.MainView = _react2.default.createClass({
+	  displayName: 'MainView',
 	  render: function render() {
-	    // let content
-	    // if (this.state.displayContributors) {
-	    //   content = <ContributorDisplay repo={this.state.repo} />
-	    // } else {
-	    //   content = <ChooseRepositoryForm
-	    //     repo={this.state.repo}
-	    //     onUserInput={this.updateState}
-	    //     ensureOAuth={this.ensureOAuth}
-	    //     loadRepo={this.loadRepo} />
-	    // }
-	    // return <StyleRoot>
-	    //   <Header
-	    //     repo={this.state.repo}
-	    //     hasOAuth={this.state.hasOAuth} />
-	    //   {content}
-	    //   {JSON.stringify(this.state.error)}
-	    // </StyleRoot>
-	    return _react2.default.createElement('img', { src: '../icon.png' });
+	    if (this.props.media_available) {
+	      return _react2.default.createElement(_chromecast.PlaybackContainer, null);
+	    } else {
+	      return _react2.default.createElement('span', null);
+	    }
 	  }
 	});
 	
-	exports.Main = Main;
+	var Main = exports.Main = (0, _reactRedux.connect)(function (state) {
+	  return { media_available: !!state.media };
+	}, function () {
+	  return {};
+	})(MainView);
 
 /***/ },
 /* 169 */
@@ -21131,7 +20909,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	*/
 	
 	var API_AVAILABLE = exports.API_AVAILABLE = 'chromecast.api.available';
-	var API_UNAVILABLE = exports.API_UNAVILABLE = 'chromecast.api.unavailable';
+	var API_UNAVAILABLE = exports.API_UNAVAILABLE = 'chromecast.api.unavailable';
 	
 	var DISCOVER_START = exports.DISCOVER_START = 'chromecast.discover.start';
 	var DISCOVER_STOP = exports.DISCOVER_STOP = 'chromecast.discover.stop';
@@ -21155,6 +20933,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	var MSG_ERROR = exports.MSG_ERROR = 'chromecast.msg.error';
 	
 	var MSG_RECEIVED = exports.MSG_RECEIVED = 'chromecast.msg.received';
+	
+	var MEDIA_LOAD = exports.MEDIA_LOAD = 'chromecast.media.load';
+	var MEDIA_ERROR = exports.MEDIA_ERROR = 'chromecast.media.error';
+	var MEDIA_LOADED = exports.MEDIA_LOADED = 'chromecast.media.loaded';
+	var MEDIA_LOADING = exports.MEDIA_LOADING = 'chromecast.media.loading';
+	var MEDIA_STATUS_UPDATED = exports.MEDIA_STATUS_UPDATED = 'chromecast.media.status-updated';
+	var MEDIA_PLAY = exports.MEDIA_PLAY = 'chromecast.media.play';
+	var MEDIA_PAUSE = exports.MEDIA_PAUSE = 'chromecast.media.pause';
+	var MEDIA_SEEK = exports.MEDIA_SEEK = 'chromecast.media.seek';
 
 /***/ },
 /* 181 */
@@ -21174,6 +20961,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	    enumerable: true,
 	    get: function get() {
 	      return _middleware[key];
+	    }
+	  });
+	});
+	
+	var _media = __webpack_require__(186);
+	
+	Object.keys(_media).forEach(function (key) {
+	  if (key === "default") return;
+	  Object.defineProperty(exports, key, {
+	    enumerable: true,
+	    get: function get() {
+	      return _media[key];
 	    }
 	  });
 	});
@@ -21201,6 +21000,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
+	/* global chrome*/
 	/**
 	Source taken from react-redux-chromecast-sender NPM module
 	*/
@@ -21211,7 +21011,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return function (_ref) {
 	    var dispatch = _ref.dispatch;
 	    var getState = _ref.getState;
-	
 	
 	    // -----------------------------------------------------
 	    // Set up Chromecast comms
@@ -21227,7 +21026,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        dispatch({ type: _constants.DISCOVER_START });
 	      }
 	    }, function (error) {
-	      dispatch({ type: API_UNAVAILABLE, error: error });
+	      dispatch({ type: _constants.API_UNAVAILABLE, error: error });
 	      apiAvailable = false;
 	    });
 	
@@ -21279,7 +21078,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	    return function (next) {
 	      return function (action) {
-	
 	        switch (action.type) {
 	          case _constants.DISCOVER_START:
 	            // start looking for chromecasts
@@ -21337,7 +21135,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            break;
 	          default:
 	            return next(action);
-	            break;
 	        }
 	      };
 	    };
@@ -21481,6 +21278,940 @@ return /******/ (function(modules) { // webpackBootstrap
 	    clearTimeout(timeout);
 	  };
 	}
+
+/***/ },
+/* 186 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.castMediaManager = castMediaManager;
+	
+	var _invariant = __webpack_require__(183);
+	
+	var _invariant2 = _interopRequireDefault(_invariant);
+	
+	var _constants = __webpack_require__(180);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function castMediaManager() {
+	  return function (_ref) {
+	    var dispatch = _ref.dispatch;
+	    var getState = _ref.getState;
+	
+	    var activeSession = void 0;
+	
+	    // -----------------------------------------------------
+	    // Middleware
+	
+	    var mediaLoaded = function mediaLoaded(media) {
+	      media.addUpdateListener(function (data) {
+	        dispatch({ type: _constants.MEDIA_STATUS_UPDATED, media: media });
+	      });
+	      dispatch({ type: _constants.MEDIA_LOADED, media: media });
+	    };
+	    var requires_media = function requires_media(fn) {
+	      if (!activeSession) {
+	        dispatch({ type: _constants.MEDIA_ERROR, error: 'No active session' });
+	        return;
+	      } else if (!activeSession.media.length) {
+	        dispatch({ type: _constants.MEDIA_ERROR, error: 'No media in active session' });
+	        return;
+	      } else {
+	        return fn(activeSession.media[0]);
+	      }
+	    };
+	    return function (next) {
+	      return function (action) {
+	        switch (action.type) {
+	          case _constants.SESSION_CONNECTED:
+	            var session = action.session;
+	
+	            (0, _invariant2.default)(!!session, 'No session for session connected event!?!?');
+	            activeSession = session;
+	            activeSession.addMediaListener(mediaLoaded);
+	            next(action);
+	            if (activeSession.media.length > 0) {
+	              // Fire MEDIA_LOADED event.
+	              mediaLoaded(activeSession.media[0]);
+	            }
+	            break;
+	          case _constants.MEDIA_LOAD:
+	            var media = action.media;
+	
+	
+	            (0, _invariant2.default)(!!media, 'Cannot load media without media to load.');
+	
+	            if (!activeSession) {
+	              next({ type: _constants.MEDIA_ERROR, error: 'No active session' });
+	              return;
+	            }
+	
+	            next({ type: _constants.MEDIA_LOADING, media: media });
+	            activeSession.sendMessage(media, mediaLoaded, function (error) {
+	              next({ type: _constants.MEDIA_ERROR, error: error });
+	            });
+	            break;
+	          case _constants.MEDIA_PLAY:
+	            return requires_media(function (media) {
+	              media.play();
+	            });
+	          case _constants.MEDIA_PAUSE:
+	            return requires_media(function (media) {
+	              media.pause();
+	            });
+	          case _constants.MEDIA_SEEK:
+	            var seek_request = void 0;
+	            if ('seek_request' in action) {
+	              seek_request = action.seek_request;
+	            } else {
+	              seek_request = new chrome.cast.media.SeekRequest();
+	              seek_request.currentTime = action.seek_time;
+	              if ('new_state' in action) {
+	                seek_request.resumeState = action.new_state;
+	              }
+	            }
+	            return requires_media(function (media) {
+	              media.seek(seek_request, function () {}, function (error) {
+	                next({ type: _constants.MEDIA_ERROR, error: error });
+	              });
+	            });
+	          default:
+	            return next(action);
+	        }
+	      };
+	    };
+	  };
+	}
+
+/***/ },
+/* 187 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.PlaybackContainer = undefined;
+	
+	var _react = __webpack_require__(3);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _PlaybackContainer = __webpack_require__(188);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	// const ChromecastSessionManager = React.createClass({
+	//   getInitialState () {
+	//     return {
+	//       'chromecast_session': null
+	//     }
+	//   },
+	// })
+	
+	/* eslint-env es6*/
+	exports.PlaybackContainer = _PlaybackContainer.PlaybackContainer;
+
+/***/ },
+/* 188 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.PlaybackContainer = undefined;
+	
+	var _react = __webpack_require__(3);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _constants = __webpack_require__(180);
+	
+	var chromecast_events = _interopRequireWildcard(_constants);
+	
+	var _PlaybackScrobber = __webpack_require__(196);
+	
+	var _PlaybackButton = __webpack_require__(197);
+	
+	var _PlaybackTime = __webpack_require__(198);
+	
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	var PlaybackContainer = exports.PlaybackContainer = _react2.default.createClass({
+	  displayName: 'PlaybackContainer',
+	
+	  render: function render() {
+	    return _react2.default.createElement(
+	      'span',
+	      null,
+	      _react2.default.createElement(
+	        _PlaybackButton.PlaybackButton,
+	        {
+	          playbackState: chrome.cast.media.PlayerState.PLAYING,
+	          event: chromecast_events.MEDIA_PLAY },
+	        "Play"
+	      ),
+	      _react2.default.createElement(
+	        _PlaybackButton.PlaybackButton,
+	        {
+	          playbackState: chrome.cast.media.PlayerState.PAUSED,
+	          event: chromecast_events.MEDIA_PAUSE },
+	        "Pause"
+	      ),
+	      _react2.default.createElement(_PlaybackScrobber.PlaybackScrobber, null),
+	      "Playback possition: ",
+	      _react2.default.createElement(_PlaybackTime.PlaybackTime, null)
+	    );
+	  }
+	}); /* global chrome*/
+
+/***/ },
+/* 189 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	exports.__esModule = true;
+	exports.connect = exports.Provider = undefined;
+	
+	var _Provider = __webpack_require__(190);
+	
+	var _Provider2 = _interopRequireDefault(_Provider);
+	
+	var _connect = __webpack_require__(192);
+	
+	var _connect2 = _interopRequireDefault(_connect);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+	
+	exports.Provider = _Provider2["default"];
+	exports.connect = _connect2["default"];
+
+/***/ },
+/* 190 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
+	
+	exports.__esModule = true;
+	exports["default"] = undefined;
+	
+	var _react = __webpack_require__(3);
+	
+	var _storeShape = __webpack_require__(191);
+	
+	var _storeShape2 = _interopRequireDefault(_storeShape);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var didWarnAboutReceivingStore = false;
+	function warnAboutReceivingStore() {
+	  if (didWarnAboutReceivingStore) {
+	    return;
+	  }
+	  didWarnAboutReceivingStore = true;
+	
+	  /* eslint-disable no-console */
+	  if (typeof console !== 'undefined' && typeof console.error === 'function') {
+	    console.error('<Provider> does not support changing `store` on the fly. ' + 'It is most likely that you see this error because you updated to ' + 'Redux 2.x and React Redux 2.x which no longer hot reload reducers ' + 'automatically. See https://github.com/reactjs/react-redux/releases/' + 'tag/v2.0.0 for the migration instructions.');
+	  }
+	  /* eslint-disable no-console */
+	}
+	
+	var Provider = function (_Component) {
+	  _inherits(Provider, _Component);
+	
+	  Provider.prototype.getChildContext = function getChildContext() {
+	    return { store: this.store };
+	  };
+	
+	  function Provider(props, context) {
+	    _classCallCheck(this, Provider);
+	
+	    var _this = _possibleConstructorReturn(this, _Component.call(this, props, context));
+	
+	    _this.store = props.store;
+	    return _this;
+	  }
+	
+	  Provider.prototype.render = function render() {
+	    var children = this.props.children;
+	
+	    return _react.Children.only(children);
+	  };
+	
+	  return Provider;
+	}(_react.Component);
+	
+	exports["default"] = Provider;
+	
+	if (process.env.NODE_ENV !== 'production') {
+	  Provider.prototype.componentWillReceiveProps = function (nextProps) {
+	    var store = this.store;
+	    var nextStore = nextProps.store;
+	
+	    if (store !== nextStore) {
+	      warnAboutReceivingStore();
+	    }
+	  };
+	}
+	
+	Provider.propTypes = {
+	  store: _storeShape2["default"].isRequired,
+	  children: _react.PropTypes.element.isRequired
+	};
+	Provider.childContextTypes = {
+	  store: _storeShape2["default"].isRequired
+	};
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5)))
+
+/***/ },
+/* 191 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	exports.__esModule = true;
+	
+	var _react = __webpack_require__(3);
+	
+	exports["default"] = _react.PropTypes.shape({
+	  subscribe: _react.PropTypes.func.isRequired,
+	  dispatch: _react.PropTypes.func.isRequired,
+	  getState: _react.PropTypes.func.isRequired
+	});
+
+/***/ },
+/* 192 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
+	
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+	
+	exports.__esModule = true;
+	exports["default"] = connect;
+	
+	var _react = __webpack_require__(3);
+	
+	var _storeShape = __webpack_require__(191);
+	
+	var _storeShape2 = _interopRequireDefault(_storeShape);
+	
+	var _shallowEqual = __webpack_require__(193);
+	
+	var _shallowEqual2 = _interopRequireDefault(_shallowEqual);
+	
+	var _wrapActionCreators = __webpack_require__(194);
+	
+	var _wrapActionCreators2 = _interopRequireDefault(_wrapActionCreators);
+	
+	var _isPlainObject = __webpack_require__(171);
+	
+	var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
+	
+	var _hoistNonReactStatics = __webpack_require__(195);
+	
+	var _hoistNonReactStatics2 = _interopRequireDefault(_hoistNonReactStatics);
+	
+	var _invariant = __webpack_require__(183);
+	
+	var _invariant2 = _interopRequireDefault(_invariant);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var defaultMapStateToProps = function defaultMapStateToProps(state) {
+	  return {};
+	}; // eslint-disable-line no-unused-vars
+	var defaultMapDispatchToProps = function defaultMapDispatchToProps(dispatch) {
+	  return { dispatch: dispatch };
+	};
+	var defaultMergeProps = function defaultMergeProps(stateProps, dispatchProps, parentProps) {
+	  return _extends({}, parentProps, stateProps, dispatchProps);
+	};
+	
+	function getDisplayName(WrappedComponent) {
+	  return WrappedComponent.displayName || WrappedComponent.name || 'Component';
+	}
+	
+	function checkStateShape(stateProps, dispatch) {
+	  (0, _invariant2["default"])((0, _isPlainObject2["default"])(stateProps), '`%sToProps` must return an object. Instead received %s.', dispatch ? 'mapDispatch' : 'mapState', stateProps);
+	  return stateProps;
+	}
+	
+	// Helps track hot reloading.
+	var nextVersion = 0;
+	
+	function connect(mapStateToProps, mapDispatchToProps, mergeProps) {
+	  var options = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
+	
+	  var shouldSubscribe = Boolean(mapStateToProps);
+	  var mapState = mapStateToProps || defaultMapStateToProps;
+	  var mapDispatch = (0, _isPlainObject2["default"])(mapDispatchToProps) ? (0, _wrapActionCreators2["default"])(mapDispatchToProps) : mapDispatchToProps || defaultMapDispatchToProps;
+	
+	  var finalMergeProps = mergeProps || defaultMergeProps;
+	  var _options$pure = options.pure;
+	  var pure = _options$pure === undefined ? true : _options$pure;
+	  var _options$withRef = options.withRef;
+	  var withRef = _options$withRef === undefined ? false : _options$withRef;
+	
+	  var checkMergedEquals = pure && finalMergeProps !== defaultMergeProps;
+	
+	  // Helps track hot reloading.
+	  var version = nextVersion++;
+	
+	  function computeMergedProps(stateProps, dispatchProps, parentProps) {
+	    var mergedProps = finalMergeProps(stateProps, dispatchProps, parentProps);
+	    (0, _invariant2["default"])((0, _isPlainObject2["default"])(mergedProps), '`mergeProps` must return an object. Instead received %s.', mergedProps);
+	    return mergedProps;
+	  }
+	
+	  return function wrapWithConnect(WrappedComponent) {
+	    var Connect = function (_Component) {
+	      _inherits(Connect, _Component);
+	
+	      Connect.prototype.shouldComponentUpdate = function shouldComponentUpdate() {
+	        return !pure || this.haveOwnPropsChanged || this.hasStoreStateChanged;
+	      };
+	
+	      function Connect(props, context) {
+	        _classCallCheck(this, Connect);
+	
+	        var _this = _possibleConstructorReturn(this, _Component.call(this, props, context));
+	
+	        _this.version = version;
+	        _this.store = props.store || context.store;
+	
+	        (0, _invariant2["default"])(_this.store, 'Could not find "store" in either the context or ' + ('props of "' + _this.constructor.displayName + '". ') + 'Either wrap the root component in a <Provider>, ' + ('or explicitly pass "store" as a prop to "' + _this.constructor.displayName + '".'));
+	
+	        var storeState = _this.store.getState();
+	        _this.state = { storeState: storeState };
+	        _this.clearCache();
+	        return _this;
+	      }
+	
+	      Connect.prototype.computeStateProps = function computeStateProps(store, props) {
+	        if (!this.finalMapStateToProps) {
+	          return this.configureFinalMapState(store, props);
+	        }
+	
+	        var state = store.getState();
+	        var stateProps = this.doStatePropsDependOnOwnProps ? this.finalMapStateToProps(state, props) : this.finalMapStateToProps(state);
+	
+	        return checkStateShape(stateProps);
+	      };
+	
+	      Connect.prototype.configureFinalMapState = function configureFinalMapState(store, props) {
+	        var mappedState = mapState(store.getState(), props);
+	        var isFactory = typeof mappedState === 'function';
+	
+	        this.finalMapStateToProps = isFactory ? mappedState : mapState;
+	        this.doStatePropsDependOnOwnProps = this.finalMapStateToProps.length !== 1;
+	
+	        return isFactory ? this.computeStateProps(store, props) : checkStateShape(mappedState);
+	      };
+	
+	      Connect.prototype.computeDispatchProps = function computeDispatchProps(store, props) {
+	        if (!this.finalMapDispatchToProps) {
+	          return this.configureFinalMapDispatch(store, props);
+	        }
+	
+	        var dispatch = store.dispatch;
+	
+	        var dispatchProps = this.doDispatchPropsDependOnOwnProps ? this.finalMapDispatchToProps(dispatch, props) : this.finalMapDispatchToProps(dispatch);
+	
+	        return checkStateShape(dispatchProps, true);
+	      };
+	
+	      Connect.prototype.configureFinalMapDispatch = function configureFinalMapDispatch(store, props) {
+	        var mappedDispatch = mapDispatch(store.dispatch, props);
+	        var isFactory = typeof mappedDispatch === 'function';
+	
+	        this.finalMapDispatchToProps = isFactory ? mappedDispatch : mapDispatch;
+	        this.doDispatchPropsDependOnOwnProps = this.finalMapDispatchToProps.length !== 1;
+	
+	        return isFactory ? this.computeDispatchProps(store, props) : checkStateShape(mappedDispatch, true);
+	      };
+	
+	      Connect.prototype.updateStatePropsIfNeeded = function updateStatePropsIfNeeded() {
+	        var nextStateProps = this.computeStateProps(this.store, this.props);
+	        if (this.stateProps && (0, _shallowEqual2["default"])(nextStateProps, this.stateProps)) {
+	          return false;
+	        }
+	
+	        this.stateProps = nextStateProps;
+	        return true;
+	      };
+	
+	      Connect.prototype.updateDispatchPropsIfNeeded = function updateDispatchPropsIfNeeded() {
+	        var nextDispatchProps = this.computeDispatchProps(this.store, this.props);
+	        if (this.dispatchProps && (0, _shallowEqual2["default"])(nextDispatchProps, this.dispatchProps)) {
+	          return false;
+	        }
+	
+	        this.dispatchProps = nextDispatchProps;
+	        return true;
+	      };
+	
+	      Connect.prototype.updateMergedPropsIfNeeded = function updateMergedPropsIfNeeded() {
+	        var nextMergedProps = computeMergedProps(this.stateProps, this.dispatchProps, this.props);
+	        if (this.mergedProps && checkMergedEquals && (0, _shallowEqual2["default"])(nextMergedProps, this.mergedProps)) {
+	          return false;
+	        }
+	
+	        this.mergedProps = nextMergedProps;
+	        return true;
+	      };
+	
+	      Connect.prototype.isSubscribed = function isSubscribed() {
+	        return typeof this.unsubscribe === 'function';
+	      };
+	
+	      Connect.prototype.trySubscribe = function trySubscribe() {
+	        if (shouldSubscribe && !this.unsubscribe) {
+	          this.unsubscribe = this.store.subscribe(this.handleChange.bind(this));
+	          this.handleChange();
+	        }
+	      };
+	
+	      Connect.prototype.tryUnsubscribe = function tryUnsubscribe() {
+	        if (this.unsubscribe) {
+	          this.unsubscribe();
+	          this.unsubscribe = null;
+	        }
+	      };
+	
+	      Connect.prototype.componentDidMount = function componentDidMount() {
+	        this.trySubscribe();
+	      };
+	
+	      Connect.prototype.componentWillReceiveProps = function componentWillReceiveProps(nextProps) {
+	        if (!pure || !(0, _shallowEqual2["default"])(nextProps, this.props)) {
+	          this.haveOwnPropsChanged = true;
+	        }
+	      };
+	
+	      Connect.prototype.componentWillUnmount = function componentWillUnmount() {
+	        this.tryUnsubscribe();
+	        this.clearCache();
+	      };
+	
+	      Connect.prototype.clearCache = function clearCache() {
+	        this.dispatchProps = null;
+	        this.stateProps = null;
+	        this.mergedProps = null;
+	        this.haveOwnPropsChanged = true;
+	        this.hasStoreStateChanged = true;
+	        this.renderedElement = null;
+	        this.finalMapDispatchToProps = null;
+	        this.finalMapStateToProps = null;
+	      };
+	
+	      Connect.prototype.handleChange = function handleChange() {
+	        if (!this.unsubscribe) {
+	          return;
+	        }
+	
+	        var prevStoreState = this.state.storeState;
+	        var storeState = this.store.getState();
+	
+	        if (!pure || prevStoreState !== storeState) {
+	          this.hasStoreStateChanged = true;
+	          this.setState({ storeState: storeState });
+	        }
+	      };
+	
+	      Connect.prototype.getWrappedInstance = function getWrappedInstance() {
+	        (0, _invariant2["default"])(withRef, 'To access the wrapped instance, you need to specify ' + '{ withRef: true } as the fourth argument of the connect() call.');
+	
+	        return this.refs.wrappedInstance;
+	      };
+	
+	      Connect.prototype.render = function render() {
+	        var haveOwnPropsChanged = this.haveOwnPropsChanged;
+	        var hasStoreStateChanged = this.hasStoreStateChanged;
+	        var renderedElement = this.renderedElement;
+	
+	        this.haveOwnPropsChanged = false;
+	        this.hasStoreStateChanged = false;
+	
+	        var shouldUpdateStateProps = true;
+	        var shouldUpdateDispatchProps = true;
+	        if (pure && renderedElement) {
+	          shouldUpdateStateProps = hasStoreStateChanged || haveOwnPropsChanged && this.doStatePropsDependOnOwnProps;
+	          shouldUpdateDispatchProps = haveOwnPropsChanged && this.doDispatchPropsDependOnOwnProps;
+	        }
+	
+	        var haveStatePropsChanged = false;
+	        var haveDispatchPropsChanged = false;
+	        if (shouldUpdateStateProps) {
+	          haveStatePropsChanged = this.updateStatePropsIfNeeded();
+	        }
+	        if (shouldUpdateDispatchProps) {
+	          haveDispatchPropsChanged = this.updateDispatchPropsIfNeeded();
+	        }
+	
+	        var haveMergedPropsChanged = true;
+	        if (haveStatePropsChanged || haveDispatchPropsChanged || haveOwnPropsChanged) {
+	          haveMergedPropsChanged = this.updateMergedPropsIfNeeded();
+	        } else {
+	          haveMergedPropsChanged = false;
+	        }
+	
+	        if (!haveMergedPropsChanged && renderedElement) {
+	          return renderedElement;
+	        }
+	
+	        if (withRef) {
+	          this.renderedElement = (0, _react.createElement)(WrappedComponent, _extends({}, this.mergedProps, {
+	            ref: 'wrappedInstance'
+	          }));
+	        } else {
+	          this.renderedElement = (0, _react.createElement)(WrappedComponent, this.mergedProps);
+	        }
+	
+	        return this.renderedElement;
+	      };
+	
+	      return Connect;
+	    }(_react.Component);
+	
+	    Connect.displayName = 'Connect(' + getDisplayName(WrappedComponent) + ')';
+	    Connect.WrappedComponent = WrappedComponent;
+	    Connect.contextTypes = {
+	      store: _storeShape2["default"]
+	    };
+	    Connect.propTypes = {
+	      store: _storeShape2["default"]
+	    };
+	
+	    if (process.env.NODE_ENV !== 'production') {
+	      Connect.prototype.componentWillUpdate = function componentWillUpdate() {
+	        if (this.version === version) {
+	          return;
+	        }
+	
+	        // We are hot reloading!
+	        this.version = version;
+	        this.trySubscribe();
+	        this.clearCache();
+	      };
+	    }
+	
+	    return (0, _hoistNonReactStatics2["default"])(Connect, WrappedComponent);
+	  };
+	}
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5)))
+
+/***/ },
+/* 193 */
+/***/ function(module, exports) {
+
+	"use strict";
+	
+	exports.__esModule = true;
+	exports["default"] = shallowEqual;
+	function shallowEqual(objA, objB) {
+	  if (objA === objB) {
+	    return true;
+	  }
+	
+	  var keysA = Object.keys(objA);
+	  var keysB = Object.keys(objB);
+	
+	  if (keysA.length !== keysB.length) {
+	    return false;
+	  }
+	
+	  // Test for A's keys different from B.
+	  var hasOwn = Object.prototype.hasOwnProperty;
+	  for (var i = 0; i < keysA.length; i++) {
+	    if (!hasOwn.call(objB, keysA[i]) || objA[keysA[i]] !== objB[keysA[i]]) {
+	      return false;
+	    }
+	  }
+	
+	  return true;
+	}
+
+/***/ },
+/* 194 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	exports.__esModule = true;
+	exports["default"] = wrapActionCreators;
+	
+	var _redux = __webpack_require__(169);
+	
+	function wrapActionCreators(actionCreators) {
+	  return function (dispatch) {
+	    return (0, _redux.bindActionCreators)(actionCreators, dispatch);
+	  };
+	}
+
+/***/ },
+/* 195 */
+/***/ function(module, exports) {
+
+	/**
+	 * Copyright 2015, Yahoo! Inc.
+	 * Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
+	 */
+	'use strict';
+	
+	var REACT_STATICS = {
+	    childContextTypes: true,
+	    contextTypes: true,
+	    defaultProps: true,
+	    displayName: true,
+	    getDefaultProps: true,
+	    mixins: true,
+	    propTypes: true,
+	    type: true
+	};
+	
+	var KNOWN_STATICS = {
+	    name: true,
+	    length: true,
+	    prototype: true,
+	    caller: true,
+	    arguments: true,
+	    arity: true
+	};
+	
+	module.exports = function hoistNonReactStatics(targetComponent, sourceComponent) {
+	    var keys = Object.getOwnPropertyNames(sourceComponent);
+	    for (var i=0; i<keys.length; ++i) {
+	        if (!REACT_STATICS[keys[i]] && !KNOWN_STATICS[keys[i]]) {
+	            try {
+	                targetComponent[keys[i]] = sourceComponent[keys[i]];
+	            } catch (error) {
+	
+	            }
+	        }
+	    }
+	
+	    return targetComponent;
+	};
+
+
+/***/ },
+/* 196 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.PlaybackScrobber = exports.PlaybackScrobberView = undefined;
+	
+	var _react = __webpack_require__(3);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _reactRedux = __webpack_require__(189);
+	
+	var _constants = __webpack_require__(180);
+	
+	var chromecast_events = _interopRequireWildcard(_constants);
+	
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	var noop = function noop() {}; /* global chrome*/
+	
+	var PlaybackScrobberView = exports.PlaybackScrobberView = _react2.default.createClass({
+	  displayName: 'PlaybackScrobberView',
+	
+	  propTypes: {
+	    duration: _react.PropTypes.number.isRequired,
+	    currentTime: _react.PropTypes.number.isRequired,
+	    onScrobb: _react.PropTypes.func.isRequired
+	  },
+	  render: function render() {
+	    return _react2.default.createElement('input', {
+	      type: 'range',
+	      min: '0',
+	      max: this.props.duration,
+	      value: this.props.currentTime,
+	      onChange: this.props.onScrobb
+	    });
+	  }
+	});
+	var mapStateToProps = function mapStateToProps(state) {
+	  return {
+	    duration: state.media.duration,
+	    currentTime: state.media.currentTime
+	  };
+	};
+	var mapDispatchToProps = function mapDispatchToProps(dispatch) {
+	  return {
+	    onScrobb: function onScrobb(event) {
+	      dispatch({
+	        type: chromecast_events.MEDIA_SEEK,
+	        seek_time: event.target.value
+	      });
+	    }
+	  };
+	};
+	var PlaybackScrobber = exports.PlaybackScrobber = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(PlaybackScrobberView);
+
+/***/ },
+/* 197 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.PlaybackButton = exports.PlaybackButtonView = undefined;
+	
+	var _react = __webpack_require__(3);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _reactRedux = __webpack_require__(189);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	var PlaybackButtonView = exports.PlaybackButtonView = _react2.default.createClass({
+	  displayName: 'PlaybackButtonView',
+	
+	  propTypes: {
+	    disabled: _react.PropTypes.bool.isRequired,
+	    onClick: _react.PropTypes.func.isRequired,
+	    children: _react.PropTypes.node.isRequired
+	  },
+	  render: function render() {
+	    return _react2.default.createElement(
+	      'button',
+	      {
+	        onClick: this.props.onClick,
+	        disabled: this.props.disabled },
+	      this.props.children
+	    );
+	  }
+	});
+	
+	var mapStateToProps = function mapStateToProps(state, ownProps) {
+	  return {
+	    // Disable the button when the player state matches(you can't play a playing video.)
+	    disabled: ownProps.playbackState === state.media.playerState
+	  };
+	};
+	
+	var mapDispatchToProps = function mapDispatchToProps(dispatch, ownProps) {
+	  return {
+	    onClick: function onClick() {
+	      dispatch({
+	        type: ownProps.event
+	      });
+	    }
+	  };
+	};
+	
+	var PlaybackButton = exports.PlaybackButton = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(PlaybackButtonView);
+
+/***/ },
+/* 198 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.PlaybackTime = exports.PlaybackTimeView = undefined;
+	
+	var _react = __webpack_require__(3);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _reactRedux = __webpack_require__(189);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	var zeroPad = function zeroPad(num) {
+	  if (num < 0) {
+	    return '' + num;
+	  } else if (num === 0) {
+	    return '00';
+	  } else if (num < 10) {
+	    return '0' + num;
+	  } else {
+	    return num;
+	  }
+	};
+	
+	var PlaybackTimeView = exports.PlaybackTimeView = _react2.default.createClass({
+	  displayName: 'PlaybackTimeView',
+	
+	  propTypes: {
+	    currentTime: _react.PropTypes.number.isRequired,
+	    showHours: _react.PropTypes.bool
+	  },
+	  render: function render() {
+	    var secs = parseInt(this.props.currentTime % 60);
+	    var mins = parseInt(this.props.currentTime / 60);
+	    if (this.props.showHours) {
+	      var hours = parseInt(_mins / 60);
+	      var _mins = _mins % 60;
+	      return _react2.default.createElement(
+	        'span',
+	        null,
+	        hours,
+	        ':',
+	        zeroPad(_mins),
+	        ':',
+	        zeroPad(secs)
+	      );
+	    } else {
+	      return _react2.default.createElement(
+	        'span',
+	        null,
+	        mins,
+	        ':',
+	        zeroPad(secs)
+	      );
+	    }
+	  }
+	});
+	
+	var mapStateToProps = function mapStateToProps(state, ownProps) {
+	  return {
+	    // Disable the button when the player state matches(you can't play a playing video.)
+	    currentTime: state.media_currentTime
+	  };
+	};
+	
+	var PlaybackTime = exports.PlaybackTime = (0, _reactRedux.connect)(mapStateToProps)(PlaybackTimeView);
 
 /***/ }
 /******/ ])

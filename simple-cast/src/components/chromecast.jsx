@@ -1,9 +1,7 @@
 /* eslint-env es6*/
 import React from 'react'
 
-const ContributorDisplay = <div />
-
-
+import { PlaybackContainer } from './view/PlaybackContainer.jsx'
 // const ChromecastSessionManager = React.createClass({
 //   getInitialState () {
 //     return {
@@ -12,4 +10,4 @@ const ContributorDisplay = <div />
 //   },
 // })
 
-export {  }
+export { PlaybackContainer }

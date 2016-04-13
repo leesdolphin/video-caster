@@ -41,7 +41,7 @@ function onMediaError () {
   console.log('onMediaError', arguments)
 }
 
-var playback_url_promise = new Promise(function (purl_resolve, purl_reject) {
+var playback_media_promise = new Promise(function (purl_resolve, purl_reject) {
   document.addEventListener('DOMContentLoaded', function () {
     if (!/(^\?|&)kiss_url=/.test(document.location.search)) {
       alert("No url. Carp")
@@ -50,8 +50,9 @@ var playback_url_promise = new Promise(function (purl_resolve, purl_reject) {
     var kiss_url = /(^\?|&)kiss_url=([^&]*)(&|$)/.exec(document.location.search)[2]
     kiss_url = decodeURIComponent(kiss_url)
     alert(kiss_url)
-    requestDocument(kiss_url).then(function (xhr) {
-      var quality_selector = xhr.responseXML.getElementById('selectQuality')
+    purl_resolve(requestDocument(kiss_url).then(function (xhr) {
+      var kiss_document = xhr.responseXML
+      var quality_selector = kiss_document.getElementById('selectQuality')
       var qual_to_url = {}
       var default_qual
       for (var i = 0; i < quality_selector.childNodes.length; i++) {
@@ -65,8 +66,24 @@ var playback_url_promise = new Promise(function (purl_resolve, purl_reject) {
       }
       var url = qual_to_url[default_qual]
       url = url.replace('http://', 'https://')
-      return resolveRedirects(url).then(purl_resolve)
-    }).catch(purl_reject)
+      return resolveRedirects(url).then(function (mediaUrl) {
+        var mediaInfo = new chrome.cast.media.MediaInfo(mediaUrl)
+        mediaInfo.contentType = 'video/mp4'
+        var metadata = new chrome.cast.media.TvShowMediaMetadata()
+        var titleRegex = /^\s*\w+\s+(.*)\s+information\s*$/ig
+        var title = titleRegex.exec(kiss_document.querySelector('#navsubbar>p>a').text)[1]
+        var episodeSelector = kiss_document.getElementById('selectEpisode')
+        metadata.episode = episodeSelector.selectedIndex
+        metadata.title = episodeSelector.selectedOptions[0].text.trim()
+        metadata.seriesTitle = title
+        metadata.images = []  // Images is kinda-hard to get(needs another request.)
+        mediaInfo.metadata = metadata
+        mediaInfo.customData = {
+          'episode_url': kiss_url
+        }
+        return mediaInfo
+      })
+    }))
   })
 })
 var cast_api_promise = new Promise(function (cast_resolve, cast_reject) {
@@ -107,12 +124,10 @@ var cast_api_promise = new Promise(function (cast_resolve, cast_reject) {
   }
 })
 
-Promise.all([playback_url_promise, cast_api_promise]).then(function (values) {
-  var playback_url = values[0]
+Promise.all([playback_media_promise, cast_api_promise]).then(function (values) {
+  var mediaInfo = values[0]
   var cast_session = values[1]
 
-  var mediaInfo = new chrome.cast.media.MediaInfo(playback_url)
-  mediaInfo.contentType = 'video/mp4'
   var request = new chrome.cast.media.LoadRequest(mediaInfo)
   cast_session.loadMedia(request,
     onMediaDiscovered.bind(this, 'loadMedia'),
