@@ -1,8 +1,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
+import createLogger from 'redux-logger'
 
 import { Main } from './components/root.jsx'
+import * as media from './media/index.jsx'
 
 import {createStore, applyMiddleware, combineReducers} from 'redux'
 import {castSender, castMediaManager} from './react-redux-chromecast-sender'
@@ -49,18 +51,32 @@ const media_reducer = function (state = false, event) {
       return state
   }
 }
+function episodes_reducer (state = {}, event) {
+  switch (event.type) {
+    case media.EPISODE_INFORMATION:
+      return state
+    default:
+      return state
+  }
+}
 const reducer = combineReducers({
   api_available: api_available_reducer,
   session: session_reducer,
   media: media_reducer,
-  discovering: dicovering_reducer
+  discovering: dicovering_reducer,
+  episodes: episodes_reducer
 })
 
 function entrypoint (domElm) {
-  const middleware = [castSender(
-    'CC1AD845', // AppId - chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID
-    'urn:x-cast:com.google.cast.media' // namespace for communication (namespace must match on receiver)
-  ), castMediaManager()]
+  const middleware = [
+    castSender(
+      'CC1AD845', // AppId - chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID
+      'urn:x-cast:com.google.cast.media' // namespace for communication (namespace must match on receiver)
+    ),
+    castMediaManager(),
+    createLogger({duration: true}),
+    media.episode_middleware()
+  ]
   const store = applyMiddleware(...middleware)(createStore)(reducer, {})
   setInterval(() => {
     if (store.getState()['media']) {
