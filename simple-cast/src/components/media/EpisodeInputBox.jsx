@@ -1,14 +1,14 @@
 import React, { PropTypes } from 'react'
 import { connect } from 'react-redux'
 
-import { requestPosts } from '../../media/index.jsx'
+import { requestEpisode } from '../../media/index.jsx'
 
 export const EpisodeInputBoxView = React.createClass({
   propTypes: {
     onClick: PropTypes.func.isRequired
   },
   getInitialState () {
-    return {value: ''}
+    return {value: 'https://kissanime.to/Anime/Sailor-Moon-R/Episode-073?id=101236'}
   },
   handleChange (event) {
     this.setState({value: event.target.value})
@@ -34,7 +34,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch, ownProps) => {
   return {
     onClick (episodeUrl) {
-      dispatch(requestPosts(episodeUrl))
+      dispatch(requestEpisode(episodeUrl))
     }
   }
 }

@@ -52,9 +52,30 @@ const media_reducer = function (state = false, event) {
   }
 }
 function episodes_reducer (state = {}, event) {
+  const new_state = Object.assign({}, state)
   switch (event.type) {
-    case media.EPISODE_INFORMATION:
-      return state
+    case media.EPISODE_LOAD_STARTED:
+      new_state[event.episode_url] = Object.assign({
+        episode_url: event.episode_url,
+        state: 'Loading',
+        error: null
+      }, new_state[event.episode_url])
+      return new_state
+    case media.EPISODE_LOAD_FAILED:
+      // We keep the old data around in case it is useful.
+      new_state[event.episode_url] = Object.assign({
+        episode_url: event.episode_url,
+        state: 'Failed',
+        error: event.error
+      }, new_state[event.episode_url])
+      return new_state
+    case media.EPISODE_LOAD_SUCCEEDED:
+      new_state[event.episode_url] = Object.assign({
+        episode_url: event.episode_url,
+        state: 'Loaded',
+        error: null
+      }, event.episode_data)
+      return new_state
     default:
       return state
   }
@@ -75,7 +96,8 @@ function entrypoint (domElm) {
     ),
     castMediaManager(),
     createLogger({duration: true}),
-    media.episode_middleware()
+    media.episode_middleware(),
+    media.series_middleware()
   ]
   const store = applyMiddleware(...middleware)(createStore)(reducer, {})
   setInterval(() => {
