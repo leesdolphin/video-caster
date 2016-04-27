@@ -11,17 +11,19 @@ export const SERIES_LOAD_STARTED = 'kiss.media.series.load.start'
 export const SERIES_LOAD_FAILED = 'kiss.media.series.load.fail'
 export const SERIES_LOAD_SUCCEEDED = 'kiss.media.series.load.success'
 
-export function requestEpisode (episode_url) {
+export function requestEpisode (episode_url, known_data) {
   return {
-    type: REQUEST_EPISODE,
-    episode_url
+    episode_url,
+    known_data,
+    type: REQUEST_EPISODE
   }
 }
 
-export function requestSeries (series_url) {
+export function requestSeries (series_url, known_data) {
   return {
-    type: REQUEST_SERIES_INFORMATION,
-    series_url
+    series_url,
+    known_data,
+    type: REQUEST_SERIES_INFORMATION
   }
 }
 
@@ -30,6 +32,7 @@ export function episode_middleware () {
     return (next) => (action) => {
       if (action.type === REQUEST_EPISODE) {
         const episode_url = action.episode_url
+        const known_data = action.known_data
         loadEpisode(episode_url).then(function (episode_data) {
           dispatch({
             episode_data,
@@ -45,6 +48,7 @@ export function episode_middleware () {
         })
         dispatch({
           episode_url,
+          known_data,
           type: EPISODE_LOAD_STARTED
         })
       } else {

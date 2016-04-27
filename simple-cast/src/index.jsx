@@ -55,26 +55,39 @@ function episodes_reducer (state = {}, event) {
   const new_state = Object.assign({}, state)
   switch (event.type) {
     case media.EPISODE_LOAD_STARTED:
-      new_state[event.episode_url] = Object.assign({
-        episode_url: event.episode_url,
-        state: 'Loading',
-        error: null
-      }, new_state[event.episode_url])
+      new_state[event.episode_url] = Object.assign(
+        {},
+        new_state[event.episode_url],
+        event.known_data,
+        {
+          episode_url: event.episode_url,
+          state: 'Loading',
+          error: null
+        }
+      )
       return new_state
     case media.EPISODE_LOAD_FAILED:
       // We keep the old data around in case it is useful.
-      new_state[event.episode_url] = Object.assign({
-        episode_url: event.episode_url,
-        state: 'Failed',
-        error: event.error
-      }, new_state[event.episode_url])
+      new_state[event.episode_url] = Object.assign(
+        {},
+        new_state[event.episode_url],
+        {
+          episode_url: event.episode_url,
+          state: 'Failed',
+          error: event.error
+        }
+      )
       return new_state
     case media.EPISODE_LOAD_SUCCEEDED:
-      new_state[event.episode_url] = Object.assign({
-        episode_url: event.episode_url,
-        state: 'Loaded',
-        error: null
-      }, event.episode_data)
+      new_state[event.episode_url] = Object.assign(
+        {},
+        event.episode_data,
+        {
+          episode_url: event.episode_url,
+          state: 'Loaded',
+          error: null
+        }
+      )
       return new_state
     default:
       return state
