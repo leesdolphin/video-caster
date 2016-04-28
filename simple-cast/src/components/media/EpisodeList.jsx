@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react'
 import { connect } from 'react-redux'
 
-import { Episode } from './Episode.jsx'
+import { EpisodeDisplay } from './EpisodeDisplay.jsx'
 import { LoadEpisodeButton } from './LoadEpisodeButton.jsx'
 
 import { LoadingSpinner } from '../generic/LoadingSpinner.jsx'
@@ -34,7 +34,7 @@ export const EpisodeListView = React.createClass({
         }
         previous_type = 'episode'
         last_episode = episode
-        rows.push(<Episode episode={episode} key={episode.episode_url} />)
+        rows.push(<EpisodeDisplay episode={episode} key={episode.episode_url} />)
         return
       } else if (episode && episode.state === 'Loading') {
         if (previous_type !== 'loading') {

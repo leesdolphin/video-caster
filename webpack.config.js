@@ -1,11 +1,10 @@
 const path = require('path')
 
-var webpack = require("webpack");
-
+const webpack = require('webpack')
 
 const config = {
   entry: {
-    'index': [path.resolve(__dirname, 'simple-cast/src/index.jsx')],
+    'index': [path.resolve(__dirname, 'simple-cast/src/index.jsx')]
   },
   output: {
     path: __dirname,
