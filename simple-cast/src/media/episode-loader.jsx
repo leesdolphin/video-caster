@@ -58,8 +58,8 @@ function loadSeriesLink (kiss_document) {
   return {}
 }
 
-export function loadEpisode (episodeUrl) {
-  return kiss_fetch_html(episodeUrl, {
+export function loadEpisode (episode_url) {
+  return kiss_fetch_html(episode_url, {
     credentials: 'include'
   }).then(function (kiss_document) {
     // We combine all these objects together; but we try to resolve

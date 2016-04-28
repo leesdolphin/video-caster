@@ -21,6 +21,10 @@ export function kiss_fetch_html (...args) {
   return kiss_fetch(...args).then(checkResponse).then((response) => {
     return response.text().then((response_text) => {
       const doc = (new window.DOMParser()).parseFromString(response_text, 'text/html')
+      // doc.location = response.url
+      const newBase = doc.createElement('base')
+      newBase.setAttribute('href', response.url)
+      doc.getElementsByTagName('head')[0].appendChild(newBase)
       doc.url = response.url
       return doc
     })

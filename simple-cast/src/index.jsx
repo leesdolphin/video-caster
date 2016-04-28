@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
 import createLogger from 'redux-logger'
+import thunk from 'redux-thunk'
 
 import { Main } from './components/root.jsx'
 import * as media from './media/index.jsx'
@@ -93,12 +94,57 @@ function episodes_reducer (state = {}, event) {
       return state
   }
 }
+
+function series_reducer (state = {}, event) {
+  const new_state = Object.assign({}, state)
+  switch (event.type) {
+    case media.SERIES_LOAD_STARTED:
+      new_state[event.series_url] = Object.assign(
+        {},
+        new_state[event.series_url],
+        event.known_data,
+        {
+          episode_url: event.series_url,
+          state: 'Loading',
+          error: null
+        }
+      )
+      return new_state
+    case media.SERIES_LOAD_FAILED:
+      // We keep the old data around in case it is useful.
+      new_state[event.series_url] = Object.assign(
+        {},
+        new_state[event.series_url],
+        {
+          episode_url: event.series_url,
+          state: 'Failed',
+          error: event.error
+        }
+      )
+      return new_state
+    case media.SERIES_LOAD_SUCCEEDED:
+      new_state[event.series_url] = Object.assign(
+        {},
+        event.series_data,
+        {
+          episode_url: event.series_url,
+          state: 'Loaded',
+          error: null
+        }
+      )
+      return new_state
+    default:
+      return state
+  }
+}
+
 const reducer = combineReducers({
   api_available: api_available_reducer,
   session: session_reducer,
   media: media_reducer,
   discovering: dicovering_reducer,
-  episodes: episodes_reducer
+  episodes: episodes_reducer,
+  series: series_reducer
 })
 
 function entrypoint (domElm) {
@@ -108,11 +154,9 @@ function entrypoint (domElm) {
       'urn:x-cast:com.google.cast.media' // namespace for communication (namespace must match on receiver)
     ),
     castMediaManager(),
-    createLogger({duration: true}),
-    media.episode_middleware(),
-    media.series_middleware()
+    createLogger({duration: true, collapsed: true, logErrors: false})
   ]
-  const store = applyMiddleware(...middleware)(createStore)(reducer, {})
+  const store = createStore(reducer, applyMiddleware(thunk, ...middleware))
   setInterval(() => {
     if (store.getState()['media']) {
       store.getState()['media'].getStatus(null, () => {}, () => {})

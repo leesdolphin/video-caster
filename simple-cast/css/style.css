@@ -1,6 +1,16 @@
 button {
   width: 5rem;
 }
+input {
+  width: 100%;
+}
+table {
+  width: 100%;
+}
+table td {
+  padding: 5px;
+  box-sizing: content-box;
+}
 input[type='range'] {
   width: 30rem;
 }

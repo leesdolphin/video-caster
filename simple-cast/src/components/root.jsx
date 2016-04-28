@@ -3,10 +3,9 @@ import React from 'react'
 import { connect } from 'react-redux'
 
 import { PlaybackContainer } from './chromecast.jsx'
-import { LoadingSpinner } from './generic/LoadingSpinner.jsx'
-import { VerticalSpacer } from './generic/VerticalSpacer.jsx'
 import { EpisodeInputBox } from './media/EpisodeInputBox.jsx'
 import { EpisodeList } from './media/EpisodeList.jsx'
+import { SeriesInputBox } from './media/SeriesInputBox.jsx'
 // import { Header } from './header.jsx'
 
 console.log(Promise)
@@ -17,11 +16,14 @@ export const MainView = React.createClass({
       return <PlaybackContainer />
     } else {
       return <div>
-        <LoadingSpinner />
-        <VerticalSpacer />
-        <EpisodeInputBox />
-        <br />
-        <EpisodeList series='https://kissanime.to/Anime/Sailor-Moon-R' />
+        <table><td>
+          <EpisodeInputBox />
+          <br />
+          <EpisodeList series='https://kissanime.to/Anime/Sailor-Moon-R'/>
+        </td><td>
+          <SeriesInputBox />
+          <br />
+        </td></table>
       </div>
     }
   }
