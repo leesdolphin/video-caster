@@ -1,8 +1,20 @@
 
-export class RequestBlockedError extends Error {
+class ExtendableError extends Error {
+  constructor (message) {
+    super(message)
+    this.name = this.constructor.name
+    this.message = message
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, this.constructor)
+    } else {
+      this.stack = (new Error(message)).stack
+    }
+  }
+}
+
+export class RequestBlockedError extends ExtendableError {
   constructor (message, response = null) {
     super(message)
-    this.name = 'RequestBlockedError'
     this.response = response
   }
 }

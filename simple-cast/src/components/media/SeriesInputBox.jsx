@@ -19,10 +19,11 @@ export const SeriesInputBoxView = React.createClass({
   render () {
     return <div>
       <input
+        className='form-control'
         type={'text'}
         value={this.state.value}
         onChange={this.handleChange} />
-      <button onClick={this.onClick}>Load Series</button>
+      <button className='btn btn-primary-outline btn-sm' onClick={this.onClick}>Load Series</button>
     </div>
   }
 })
@@ -33,8 +34,8 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch, ownProps) => {
   return {
-    onClick (Series_url) {
-      dispatch(requestSeries(Series_url))
+    onClick (series_url) {
+      dispatch(requestSeries(series_url))
     }
   }
 }

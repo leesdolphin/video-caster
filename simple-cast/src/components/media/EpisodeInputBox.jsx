@@ -1,4 +1,5 @@
 import React, { PropTypes } from 'react'
+
 import { connect } from 'react-redux'
 
 import { requestEpisode } from '../../media/index.jsx'
@@ -8,7 +9,7 @@ export const EpisodeInputBoxView = React.createClass({
     onClick: PropTypes.func.isRequired
   },
   getInitialState () {
-    return {value: 'https://kissanime.to/Anime/Sailor-Moon-R/Episode-073?id=101236'}
+    return {value: 'https://kissanime.to/Anime/Sailor-Moon-R/Episode-047?id=101211'}
   },
   handleChange (event) {
     this.setState({value: event.target.value})
@@ -19,10 +20,11 @@ export const EpisodeInputBoxView = React.createClass({
   render () {
     return <div>
       <input
+        className='form-control'
         type={'text'}
         value={this.state.value}
         onChange={this.handleChange} />
-      <button onClick={this.onClick}>Load Ep</button>
+      <button className='btn btn-primary-outline btn-sm' onClick={this.onClick}>Load Ep</button>
     </div>
   }
 })
@@ -41,5 +43,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
 
 export const EpisodeInputBox = connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
+  null,
+  {pure: true}
 )(EpisodeInputBoxView)

@@ -1,0 +1,18 @@
+$enable-flex: true;
+
+@import '../../node_modules/bootstrap/scss/bootstrap';
+
+.indentEpisodeList {
+  padding-left: 5px;
+  border-left: 1px solid black;
+}
+
+.errorCard {
+  @include center-block()
+  max-width: 30rem;
+}
+
+@keyframes react-spinner_spin {
+ 0% { opacity: 1; }
+ 100% { opacity: 0.15; }
+}

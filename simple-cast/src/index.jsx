@@ -1,15 +1,21 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+
+import {createStore, applyMiddleware, combineReducers} from 'redux'
 import { Provider } from 'react-redux'
 import createLogger from 'redux-logger'
 import thunk from 'redux-thunk'
 
-import { Main } from './components/root.jsx'
-import * as media from './media/index.jsx'
-
-import {createStore, applyMiddleware, combineReducers} from 'redux'
 import {castSender, castMediaManager} from './react-redux-chromecast-sender'
 import * as chromecast_events from './react-redux-chromecast-sender/constants'
+
+import { List, Map } from 'immutable'
+
+import { swapImmutableList } from './utils/index'
+
+import { Main } from './components/root'
+import * as media from './media/index'
+import * as play_queue from './play_queue/index'
 
 const api_available_reducer = function (state = false, event) {
   switch (event.type) {
@@ -104,7 +110,7 @@ function series_reducer (state = {}, event) {
         new_state[event.series_url],
         event.known_data,
         {
-          episode_url: event.series_url,
+          series_url: event.series_url,
           state: 'Loading',
           error: null
         }
@@ -116,7 +122,7 @@ function series_reducer (state = {}, event) {
         {},
         new_state[event.series_url],
         {
-          episode_url: event.series_url,
+          series_url: event.series_url,
           state: 'Failed',
           error: event.error
         }
@@ -127,7 +133,7 @@ function series_reducer (state = {}, event) {
         {},
         event.series_data,
         {
-          episode_url: event.series_url,
+          series_url: event.series_url,
           state: 'Loaded',
           error: null
         }
@@ -138,13 +144,28 @@ function series_reducer (state = {}, event) {
   }
 }
 
+function play_queue_reducer (state = List(), event) {
+  switch (event.type) {
+    case play_queue.ADD_EPISODE:
+      const episodes = List(event.episodes || [event.episode])
+      return state.concat(episodes)
+    case play_queue.REMOVE_EPISODE:
+      const index = event.index || 0
+      return state.remove(index)
+    case play_queue.REORDER_EPISODES:
+      return swapImmutableList(state, Map(event.swapedIndexes))
+  }
+  return state
+}
+
 const reducer = combineReducers({
   api_available: api_available_reducer,
   session: session_reducer,
   media: media_reducer,
   discovering: dicovering_reducer,
   episodes: episodes_reducer,
-  series: series_reducer
+  series: series_reducer,
+  play_queue: play_queue_reducer
 })
 
 function entrypoint (domElm) {

@@ -16,20 +16,26 @@ export function requestEpisode (episode_url, known_data = {}, load_more = true) 
     if (!episode_url) {
       throw new Error('Episode URL is not given ... what am I to do?')
     }
+    dispatch({
+      episode_url,
+      known_data,
+      type: EPISODE_LOAD_STARTED
+    })
     loadEpisode(episode_url).then(function (episode_data) {
+      episode_data.episode_url = episode_url
       dispatch({
         episode_data,
         episode_url,
         type: EPISODE_LOAD_SUCCEEDED
       })
       if (load_more) {
+        if (hasNotItem(getState().series, episode_data.seriesLink)) {
+          dispatch(requestSeries(episode_data.seriesLink))
+        }
         for (const url of [episode_data.prevEpisode, episode_data.nextEpisode]) {
           if (hasNotItem(getState().episodes, url)) {
             dispatch(requestEpisodeRel(url, episode_data))
           }
-        }
-        if (hasNotItem(getState().series, episode_data.seriesLink)) {
-          dispatch(requestSeries(episode_data.seriesLink))
         }
       }
     }).catch(function (error) {
@@ -38,11 +44,6 @@ export function requestEpisode (episode_url, known_data = {}, load_more = true) 
         error,
         type: EPISODE_LOAD_FAILED
       })
-    })
-    dispatch({
-      episode_url,
-      known_data,
-      type: EPISODE_LOAD_STARTED
     })
   }
 }
@@ -67,33 +68,36 @@ export function requestEpisodeRel (episode_url, another_episodes_data) {
 
 export function requestSeries (series_url, known_data = {}, load_more = true) {
   return function (dispatch, getState) {
-    loadSeries(series_url).then(function (series_data) {
-      dispatch({
-        series_data,
-        series_url,
-        type: SERIES_LOAD_SUCCEEDED
-      })
-      const state = getState()
-      if (!load_more || !state.episodes) {
-        return
-      }
-      series_data.episodes.forEach(function (episode_url, idx, eps) {
-        if (hasNotItem(state.episodes, episode_url)) {
-          dispatch(requestEpisodeFromSeries(episode_url, series_data))
-        }
-      })
-    }).catch(function (error) {
-      dispatch({
-        series_url,
-        error,
-        type: SERIES_LOAD_FAILED
-      })
-    })
     dispatch({
       series_url,
       known_data,
       type: SERIES_LOAD_STARTED
     })
+    setImmediate(() =>
+      loadSeries(series_url).then(function (series_data) {
+        series_data.series_url = series_url
+        dispatch({
+          series_data,
+          series_url,
+          type: SERIES_LOAD_SUCCEEDED
+        })
+        const state = getState()
+        if (!load_more || !state.episodes) {
+          return
+        }
+        series_data.episodes.forEach(function (episode_url, idx, eps) {
+          if (hasNotItem(state.episodes, episode_url)) {
+            dispatch(requestEpisodeFromSeries(episode_url, series_data))
+          }
+        })
+      }).catch(function (error) {
+        dispatch({
+          series_url,
+          error,
+          type: SERIES_LOAD_FAILED
+        })
+      })
+    )
   }
 }
 
@@ -107,6 +111,7 @@ export function requestEpisodeFromSeries (episode_url, series) {
     if (idx === -1) {
       return
     }
+    knownData.number = idx
     if (idx > 0) {
       knownData.prevEpisode = series.episodes[idx - 1]
     }

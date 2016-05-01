@@ -1,13 +1,16 @@
 import React, { PropTypes } from 'react'
+
 import { connect } from 'react-redux'
+import { createSelector } from 'reselect'
+
+import { createKeyedSelector } from '../../utils/cache'
+import { buildOrderedEpisodeList } from '../../utils/episodes.jsx'
 
 import { EpisodeDisplay } from './EpisodeDisplay.jsx'
 import { LoadEpisodeButton } from './LoadEpisodeButton.jsx'
 
 import { LoadingSpinner } from '../generic/LoadingSpinner.jsx'
 import { VerticalSpacer } from '../generic/VerticalSpacer.jsx'
-
-import { buildOrderedEpisodeList } from '../../utils/episodes.jsx'
 
 export const EpisodeListView = React.createClass({
   propTypes: {
@@ -23,13 +26,14 @@ export const EpisodeListView = React.createClass({
         // We have some data. Let the Episode object handle showing it's state
         // It may have failed; or it may be updating.
         if (previous_type === 'space' || previous_type === null) {
+          const key = `next-ep-btn-${episode.episode_url}`
           // Last one was an space; but now we have an episode. So we'll add a
           //  button to load it.
           rows.push(
             <LoadEpisodeButton
               relEpisode={episode}
               direction='prevEpisode'
-              key={`next-ep-btn-${spacer_id++}`} />
+              key={key} />
           )
         }
         previous_type = 'episode'
@@ -40,17 +44,19 @@ export const EpisodeListView = React.createClass({
         if (previous_type !== 'loading') {
           // Don't show multiple loading spinners next to each other.
           previous_type = 'loading'
-          rows.push(<LoadingSpinner key={`spinner-${spacer_id++}`}/>)
+          const key = `spinner-${spacer_id++}`
+          rows.push(<LoadingSpinner key={key}/>)
         }
       } else {
         if (previous_type === 'episode') {
           // Last one was an episode; now we don't have an episode; we have a gap.
           // Note the `direction` is the URL we want to load next.
+          const key = `prev-ep-btn-${last_episode.episode_url}`
           rows.push(
             <LoadEpisodeButton
               relEpisode={last_episode}
               direction='nextEpisode'
-              key={`prev-ep-btn-${spacer_id++}`} />
+              key={key} />
           )
         }
         // We have no data. Either the episode is completely unknown
@@ -58,7 +64,8 @@ export const EpisodeListView = React.createClass({
         // the gap
         if (previous_type !== 'space') {
           previous_type = 'space'
-          rows.push(<VerticalSpacer key={`spacer-${spacer_id++}`} />)
+          const key = `spinner-${spacer_id++}`
+          rows.push(<VerticalSpacer key={key} />)
         }
       }
     })
@@ -71,18 +78,31 @@ export const EpisodeListView = React.createClass({
   }
 })
 
-const mapStateToProps = (state, ownProps) => {
-  return {
-    episodes: buildOrderedEpisodeList(state.episodes, ownProps.series)
-  }
-}
+const episodeSelector = (state) => state.episodes
+const seriesSelector = (state) => state.series
 
-const mapDispatchToProps = (dispatch, ownProps) => {
-  return {
-  }
-}
+const mapStateToProps = createKeyedSelector(
+  (state, ownProps) => ownProps.seriesUrl,
+  (series_url) => createSelector(
+      createSelector(
+        episodeSelector,
+        createSelector(
+          seriesSelector,
+          (series) => series[series_url] || series_url
+        ),
+        buildOrderedEpisodeList
+      ),
+      function (episodes_list) {
+        return {
+          episodes: episodes_list
+        }
+      }
+    )
+)
 
 export const EpisodeList = connect(
   mapStateToProps,
-  mapDispatchToProps
+  null,
+  null,
+  {pure: true}
 )(EpisodeListView)

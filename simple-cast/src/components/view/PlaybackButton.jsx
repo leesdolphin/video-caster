@@ -9,6 +9,7 @@ export const PlaybackButtonView = React.createClass({
   },
   render: function () {
     return <button
+      className='btn btn-primary-outline'
       onClick={this.props.onClick}
       disabled={this.props.disabled}>
       {this.props.children}

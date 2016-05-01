@@ -12,20 +12,25 @@ export function buildOrderedEpisodeList (episodes, series) {
     }
   }
   const episode_array = []
-  if (series.episodes) {
+  if (!series) {
+    console.log('Series not given', episode_array)
+    return episode_array
+  } else if (series.series_url && series.episodes) {
     // Already got all the series' episodes in order; Just use that.
     // We also know how many episodes there are. So fill out that information too.
     episode_array.length = series.episodes.length
     series.episodes.forEach(reducer)
-    series = series.series_url
+    console.log('Series given', series, episodes, episode_array)
   } else {
+    const series_url = series.series_url || series
     for (const episode_url in episodes) {
-      if (episodes[episode_url].seriesLink === series) {
+      if (episodes[episode_url].seriesLink === series_url) {
         reducer(episode_url)
       }
     }
+    console.log('Series URL given', series, episodes, episode_array)
   }
-  for (var i = 0; i < episode_array.length; i++) {
+  for (let i = 0; i < episode_array.length; i++) {
     // Make the array dense(not sparse) by assigning 'null' to every empty slot.
     //  and leaving the old values where they are.
     episode_array[i] = episode_array[i]

@@ -1,9 +1,9 @@
 import React, { PropTypes } from 'react'
+
 import { connect } from 'react-redux'
+import { createSelector } from 'reselect'
 
 import { SeriesDisplay } from './SeriesDisplay.jsx'
-
-import { buildOrderedSeriesList } from '../../utils/Series.jsx'
 
 export const SeriesListView = React.createClass({
   propTypes: {
@@ -12,10 +12,11 @@ export const SeriesListView = React.createClass({
   render: function () {
     const rows = []
     this.props.series.forEach((series) => {
-      if (series && series.url) {
-        rows.push(<SeriesDisplay series={series} key={series.series_url} />)
-        return
-      }
+      rows.push(
+        <SeriesDisplay
+          seriesUrl={series.series_url}
+          key={series.series_url} />
+      )
     })
     // if (rows.length === 0 || (rows.length === 1 && previous_type === 'space')) {
     //   // We have nothing, so we'll just show a blank div.
@@ -26,13 +27,38 @@ export const SeriesListView = React.createClass({
   }
 })
 
-const mapStateToProps = (state, ownProps) => {
-  return {
-    series: buildOrderedSeriesList(state.series, ownProps.series)
+const allSeriesSelector = (state) => state.series
+const seriesTitleSort = (a, b) => {
+  if (a.title < b.title) {
+    return -1
+  } else if (a.title > b.title) {
+    return 1
+  } else {
+    return 0
   }
 }
 
+const mapStateToProps = createSelector(
+  createSelector(
+    allSeriesSelector,
+    (allSeries) => {
+      const seriesList = []
+      for (const series_url in allSeries) {
+        seriesList.push(allSeries[series_url])
+      }
+      seriesList.sort(seriesTitleSort)
+      return seriesList
+    }
+  ),
+  (seriesList) => {
+    return {
+      series: seriesList
+    }
+  }
+)
+
 const mapDispatchToProps = (dispatch, ownProps) => {
+  return {}
 }
 
 export const SeriesList = connect(

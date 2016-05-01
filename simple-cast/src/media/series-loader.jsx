@@ -1,19 +1,21 @@
+// import { List } from 'immutable'
+
 import { kiss_fetch_html } from '../utils/kiss_fetch.jsx'
 import { combineObjectPromises } from '../utils/index.jsx'
 
-function loadSeriesInformation (kiss_document) {
-  const series_container = kiss_document.querySelector('.bigBarContainer')
-  if (!series_container) {
+function loadSeriesInformation (kissDocument) {
+  const seriesContainer = kissDocument.querySelector('.bigBarContainer')
+  if (!seriesContainer) {
     return Promise.reject('Unknown format.')
   }
-  const series_link = series_container.querySelector('a.bigChar')
+  const seriesLink = seriesContainer.querySelector('a.bigChar')
   return {
-    title: series_link.textContent.trim()
+    title: seriesLink.textContent.trim()
   }
 }
 
-function loadEpisodeList (kiss_document) {
-  const episodeTable = kiss_document.querySelector('.episodeList table>tbody')
+function loadEpisodeList (kissDocument) {
+  const episodeTable = kissDocument.querySelector('.episodeList table>tbody')
   if (!episodeTable) {
     return {}  // No episodes; but still a valid series(I hope).
   }
@@ -22,7 +24,8 @@ function loadEpisodeList (kiss_document) {
   const episodeLinks = episodeTable.getElementsByTagName('a')
   for (let i = 0; i < episodeLinks.length; i++) {
     const link = episodeLinks[i]
-    episodes[i] = link.href
+    // episodes.push(link.href)  // Oldest to Newest ordering
+    episodes.unshift(link.href)  // Newest to Oldest ordering.
     episodeNames[link.href] = link.textContent.trim()
   }
   return {
@@ -30,14 +33,36 @@ function loadEpisodeList (kiss_document) {
   }
 }
 
+function loadCoverImage (kissDocument) {
+  const rightBoxes = kissDocument.getElementsByClassName('rightBox')
+  for (let i = 0; i < rightBoxes.length; i++) {
+    const rightBox = rightBoxes[i]
+    const titleBars = rightBox.getElementsByClassName('barTitle')
+    if (!titleBars) {
+      continue
+    } else if (titleBars[0].textContent.trim() === 'Cover') {
+      // Found the correct block
+      const images = rightBox.getElementsByTagName('img')
+      if (!images) {
+        continue
+      }
+      return {
+        coverImage: images[0].src
+      }
+    }
+  }
+  return {}
+}
+
 export function loadSeries (seriesUrl) {
   return kiss_fetch_html(seriesUrl, {
     credentials: 'include'
-  }).then(function (kiss_document) {
+  }).then(function (kissDocument) {
     return combineObjectPromises(
-      {url: kiss_document.url},
-      loadSeriesInformation(kiss_document),
-      loadEpisodeList(kiss_document)
+      {url: kissDocument.url},
+      loadSeriesInformation(kissDocument),
+      loadEpisodeList(kissDocument),
+      loadCoverImage(kissDocument)
     )
   })
 }

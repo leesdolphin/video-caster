@@ -47,7 +47,7 @@ export const LoadEpisodeButtonView = React.createClass({
     } else {
       return <span />
     }
-    return <button onClick={this.onClick}>{btnText}</button>
+    return <button className='btn btn-primary-outline' onClick={this.onClick}>{btnText}</button>
   }
 })
 

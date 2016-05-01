@@ -5,8 +5,6 @@ import { connect } from 'react-redux'
 
 import * as chromecast_events from '../../react-redux-chromecast-sender/constants'
 
-const noop = () => {}
-
 export const PlaybackScrobberView = React.createClass({
   propTypes: {
     duration: PropTypes.number.isRequired,
@@ -15,6 +13,7 @@ export const PlaybackScrobberView = React.createClass({
   },
   render: function () {
     return <input
+      className='form-control'
       type='range'
       min='0'
       max={this.props.duration}
