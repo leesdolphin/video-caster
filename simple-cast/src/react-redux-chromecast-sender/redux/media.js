@@ -50,9 +50,10 @@ export function castMediaManager () {
             next({ type: MEDIA_ERROR, error: 'No active session' })
             return
           }
+          const request = new window.chrome.cast.media.LoadRequest(media)
 
           next({ type: MEDIA_LOADING, media })
-          activeSession.sendMessage(media, mediaLoaded, (error) => {
+          activeSession.loadMedia(request, mediaLoaded, (error) => {
             next({ type: MEDIA_ERROR, error })
           })
           break

@@ -12,6 +12,7 @@ import * as chromecast_events from './react-redux-chromecast-sender/constants'
 import { List, Map } from 'immutable'
 
 import { swapImmutableList } from './utils/index'
+import { kissDecrypt } from './utils/kiss_decrypt'
 
 import { Main } from './components/root'
 import * as media from './media/index'
@@ -59,86 +60,99 @@ const media_reducer = function (state = false, event) {
   }
 }
 function episodes_reducer (state = {}, event) {
-  const new_state = Object.assign({}, state)
+  const newState = Object.assign({}, state)
   switch (event.type) {
     case media.EPISODE_LOAD_STARTED:
-      new_state[event.episode_url] = Object.assign(
+    case media.EPISODE_UPDATE_STARTED:
+      newState[event.episodeUrl] = Object.assign(
         {},
-        new_state[event.episode_url],
-        event.known_data,
+        newState[event.episodeUrl],
+        event.knownData,
         {
-          episode_url: event.episode_url,
+          episodeUrl: event.episodeUrl,
           state: 'Loading',
           error: null
         }
       )
-      return new_state
+      return newState
     case media.EPISODE_LOAD_FAILED:
       // We keep the old data around in case it is useful.
-      new_state[event.episode_url] = Object.assign(
+      newState[event.episodeUrl] = Object.assign(
         {},
-        new_state[event.episode_url],
+        newState[event.episodeUrl],
         {
-          episode_url: event.episode_url,
+          episodeUrl: event.episodeUrl,
           state: 'Failed',
           error: event.error
         }
       )
-      return new_state
+      return newState
     case media.EPISODE_LOAD_SUCCEEDED:
-      new_state[event.episode_url] = Object.assign(
+      newState[event.episodeUrl] = Object.assign(
         {},
-        event.episode_data,
+        event.episodeData,
         {
-          episode_url: event.episode_url,
+          episodeUrl: event.episodeUrl,
           state: 'Loaded',
           error: null
         }
       )
-      return new_state
+      return newState
+    case media.EPISODE_UPDATE_SUCCEEDED:
+      newState[event.episodeUrl] = Object.assign(
+        {},
+        newState[event.episodeUrl],
+        event.changedData,
+        {
+          episodeUrl: event.episodeUrl,
+          state: 'Loaded',
+          error: null
+        }
+      )
+      return newState
     default:
       return state
   }
 }
 
 function series_reducer (state = {}, event) {
-  const new_state = Object.assign({}, state)
+  const newState = Object.assign({}, state)
   switch (event.type) {
     case media.SERIES_LOAD_STARTED:
-      new_state[event.series_url] = Object.assign(
+      newState[event.seriesUrl] = Object.assign(
         {},
-        new_state[event.series_url],
-        event.known_data,
+        newState[event.seriesUrl],
+        event.knownData,
         {
-          series_url: event.series_url,
+          seriesUrl: event.seriesUrl,
           state: 'Loading',
           error: null
         }
       )
-      return new_state
+      return newState
     case media.SERIES_LOAD_FAILED:
       // We keep the old data around in case it is useful.
-      new_state[event.series_url] = Object.assign(
+      newState[event.seriesUrl] = Object.assign(
         {},
-        new_state[event.series_url],
+        newState[event.seriesUrl],
         {
-          series_url: event.series_url,
+          seriesUrl: event.seriesUrl,
           state: 'Failed',
           error: event.error
         }
       )
-      return new_state
+      return newState
     case media.SERIES_LOAD_SUCCEEDED:
-      new_state[event.series_url] = Object.assign(
+      newState[event.seriesUrl] = Object.assign(
         {},
-        event.series_data,
+        event.seriesData,
         {
-          series_url: event.series_url,
+          seriesUrl: event.seriesUrl,
           state: 'Loaded',
           error: null
         }
       )
-      return new_state
+      return newState
     default:
       return state
   }
@@ -147,7 +161,7 @@ function series_reducer (state = {}, event) {
 function play_queue_reducer (state = List(), event) {
   switch (event.type) {
     case play_queue.ADD_EPISODE:
-      const episodes = List(event.episodes || [event.episode])
+      const episodes = List([event.episodeUrl])
       return state.concat(episodes)
     case play_queue.REMOVE_EPISODE:
       const index = event.index || 0
@@ -165,11 +179,43 @@ const reducer = combineReducers({
   discovering: dicovering_reducer,
   episodes: episodes_reducer,
   series: series_reducer,
-  play_queue: play_queue_reducer
+  playQueue: play_queue_reducer
 })
+
+const animationFrameMiddleware = function () {
+  return ({dispatch, getState}) => (next) => {
+    let frameRequest = null
+    let actionList = List()
+    function animFrame (startTime) {
+      // Don't start anything 5 milliseconds before the end of a 60FPS frame.
+      const finishBy = startTime + (1000 / 60) - 5
+      while (actionList.size && window.performance.now() < finishBy) {
+        // While we have time and items
+        const item = actionList.first()
+        actionList = actionList.shift()
+        next(item)
+      }
+      frameRequest = requestNext()
+    }
+    function requestNext () {
+      if (actionList.size) {
+        return window.requestAnimationFrame(animFrame)
+      } else {
+        return null
+      }
+    }
+    return (action) => {
+      actionList = actionList.push(action)
+      if (!frameRequest) {
+        frameRequest = requestNext()
+      }
+    }
+  }
+}
 
 function entrypoint (domElm) {
   const middleware = [
+    animationFrameMiddleware(),
     castSender(
       'CC1AD845', // AppId - chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID
       'urn:x-cast:com.google.cast.media' // namespace for communication (namespace must match on receiver)
@@ -180,13 +226,21 @@ function entrypoint (domElm) {
   const store = createStore(reducer, applyMiddleware(thunk, ...middleware))
   setInterval(() => {
     if (store.getState()['media']) {
-      store.getState()['media'].getStatus(null, () => {}, () => {})
+      store.getState()['media'].getStatus(null, () => {
+        console.log(arguments)
+      }, () => {
+        console.log(arguments)
+      })
     }
   }, 1000)
-  return ReactDOM.render(
-    (<Provider store={store}><Main /></Provider>),
-    domElm
-  )
+  return () => {
+    ReactDOM.render(
+      (<Provider store={store}>
+        <Main />
+      </Provider>),
+      domElm
+    )
+  }
 }
 
 export { entrypoint }

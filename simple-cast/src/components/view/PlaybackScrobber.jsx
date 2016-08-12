@@ -1,9 +1,7 @@
-/* global chrome*/
-
 import React, { PropTypes } from 'react'
 import { connect } from 'react-redux'
 
-import * as chromecast_events from '../../react-redux-chromecast-sender/constants'
+import * as chromecastEvents from '../../react-redux-chromecast-sender/constants'
 
 export const PlaybackScrobberView = React.createClass({
   propTypes: {
@@ -32,7 +30,7 @@ const mapDispatchToProps = (dispatch) => {
   return {
     onScrobb: (event) => {
       dispatch({
-        type: chromecast_events.MEDIA_SEEK,
+        type: chromecastEvents.MEDIA_SEEK,
         seek_time: event.target.value
       })
     }

@@ -14,7 +14,7 @@ export const LoadEpisodeButtonView = React.createClass({
     const dir = this.props.direction
     const requestedUrl = this.props.relEpisode[dir]
     if (!requestedUrl) {
-      return ''
+      return null
     }
     const knownData = {
       seriesLink: ep.seriesLink
@@ -22,14 +22,14 @@ export const LoadEpisodeButtonView = React.createClass({
     if (dir === 'prevEpisode') {
       // Trying to get previous episode.
       // So we know which episode comes next(this one), and it's number.
-      knownData['nextEpisode'] = ep.episode_url
+      knownData['nextEpisode'] = ep.episodeUrl
       knownData['number'] = ep.number - 1
     } else if (dir === 'nextEpisode') {
-      knownData['prevEpisode'] = ep.episode_url
+      knownData['prevEpisode'] = ep.episodeUrl
       knownData['number'] = ep.number + 1
     } else {
       // What !!! I don't know about that direction, so ... yeah, nah
-      return ''
+      return null
     }
     this.props.loadEpisode(requestedUrl, knownData)
   },
@@ -58,7 +58,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch, ownProps) => {
   return {
     loadEpisode (requestedUrl, knownData = {}) {
-      dispatch(requestEpisode(requestedUrl, knownData))
+      dispatch(requestEpisode(requestedUrl, knownData, false))
     }
   }
 }

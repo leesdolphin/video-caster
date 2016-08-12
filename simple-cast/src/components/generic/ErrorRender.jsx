@@ -12,7 +12,7 @@ export const ErrorRender = React.createClass({
   render () {
     const e = this.props.error
     if (!e) {
-      return ''
+      return null
     } else if (e instanceof RequestBlockedError) {
       const baseUrl = new URL(this.props.error.response.url)
       const homeUrl = new URL('/', baseUrl)

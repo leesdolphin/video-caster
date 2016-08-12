@@ -14,8 +14,8 @@ export const SeriesListView = React.createClass({
     this.props.series.forEach((series) => {
       rows.push(
         <SeriesDisplay
-          seriesUrl={series.series_url}
-          key={series.series_url} />
+          seriesUrl={series.seriesUrl}
+          key={series.seriesUrl} />
       )
     })
     // if (rows.length === 0 || (rows.length === 1 && previous_type === 'space')) {
@@ -43,8 +43,8 @@ const mapStateToProps = createSelector(
     allSeriesSelector,
     (allSeries) => {
       const seriesList = []
-      for (const series_url in allSeries) {
-        seriesList.push(allSeries[series_url])
+      for (const seriesUrl in allSeries) {
+        seriesList.push(allSeries[seriesUrl])
       }
       seriesList.sort(seriesTitleSort)
       return seriesList

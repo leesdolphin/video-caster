@@ -1,46 +1,51 @@
-import { loadEpisode } from './episode-loader.jsx'
-import { loadSeries } from './series-loader.jsx'
+import assert from 'assert'
 
-export const REQUEST_EPISODE = 'kiss.media.request_episode'
+import { loadEpisode, buildCastMedia } from './episode-loader.jsx'
+import { loadSeries } from './series-loader.jsx'
+import { parseUserUrl } from '../utils/index'
+
 export const EPISODE_LOAD_STARTED = 'kiss.media.episode.load.start'
 export const EPISODE_LOAD_FAILED = 'kiss.media.episode.load.fail'
 export const EPISODE_LOAD_SUCCEEDED = 'kiss.media.episode.load.success'
+export const EPISODE_UPDATE_STARTED = 'kiss.media.episode.update.start'
+export const EPISODE_UPDATE_SUCCEEDED = 'kiss.media.episode.update.success'
+export const DELETE_EPISODE = 'kiss.media.episode.delete'
 
-export const REQUEST_SERIES_INFORMATION = 'kiss.media.request_series'
 export const SERIES_LOAD_STARTED = 'kiss.media.series.load.start'
 export const SERIES_LOAD_FAILED = 'kiss.media.series.load.fail'
 export const SERIES_LOAD_SUCCEEDED = 'kiss.media.series.load.success'
+export const DELETE_SERIES = 'kiss.media.series.delete'
 
-export function requestEpisode (episode_url, known_data = {}, load_more = true) {
+export function requestEpisode (episodeUrl, knownData = {}, loadMore = true) {
   return (dispatch, getState) => {
-    if (!episode_url) {
+    if (!episodeUrl) {
       throw new Error('Episode URL is not given ... what am I to do?')
     }
     dispatch({
-      episode_url,
-      known_data,
+      episodeUrl,
+      knownData,
       type: EPISODE_LOAD_STARTED
     })
-    loadEpisode(episode_url).then(function (episode_data) {
-      episode_data.episode_url = episode_url
+    return loadEpisode(episodeUrl).then(function (episodeData) {
+      episodeData.episodeUrl = episodeUrl
       dispatch({
-        episode_data,
-        episode_url,
+        episodeData,
+        episodeUrl,
         type: EPISODE_LOAD_SUCCEEDED
       })
-      if (load_more) {
-        if (hasNotItem(getState().series, episode_data.seriesLink)) {
-          dispatch(requestSeries(episode_data.seriesLink))
+      if (loadMore) {
+        if (hasNotItem(getState().series, episodeData.seriesLink)) {
+          dispatch(requestSeries(episodeData.seriesLink))
         }
-        for (const url of [episode_data.prevEpisode, episode_data.nextEpisode]) {
+        for (const url of [episodeData.prevEpisode, episodeData.nextEpisode]) {
           if (hasNotItem(getState().episodes, url)) {
-            dispatch(requestEpisodeRel(url, episode_data))
+            dispatch(requestEpisodeRel(url, episodeData))
           }
         }
       }
     }).catch(function (error) {
       dispatch({
-        episode_url,
+        episodeUrl,
         error,
         type: EPISODE_LOAD_FAILED
       })
@@ -48,66 +53,65 @@ export function requestEpisode (episode_url, known_data = {}, load_more = true) 
   }
 }
 
-export function requestEpisodeRel (episode_url, another_episodes_data) {
-  // Loads `episode_url`, and provides some extra information.
+export function requestEpisodeRel (episodeUrl, anotherEpisodesData) {
+  // Loads `episodeUrl`, and provides some extra information.
   // Assumes the series is the same; may also inferr episode number & prev/next urls.
-  const known_data = {
-    seriesLink: another_episodes_data.seriesLink
+  const knownData = {
+    seriesLink: anotherEpisodesData.seriesLink
   }
-  if (episode_url === another_episodes_data.prevEpisode) {
+  if (episodeUrl === anotherEpisodesData.prevEpisode) {
     // The requested episode is before the 'rel' epsiode. Add that info
-    known_data.nextEpisode = another_episodes_data.episode_url
-    known_data.number = another_episodes_data.number - 1
-  } else if (episode_url === another_episodes_data.nextEpisode) {
+    knownData.nextEpisode = anotherEpisodesData.episodeUrl
+    knownData.number = anotherEpisodesData.number - 1
+  } else if (episodeUrl === anotherEpisodesData.nextEpisode) {
     // The requested episode is after the 'rel' epsiode. Add that info
-    known_data.prevEpisode = another_episodes_data.episode_url
-    known_data.number = another_episodes_data.number + 1
+    knownData.prevEpisode = anotherEpisodesData.episodeUrl
+    knownData.number = anotherEpisodesData.number + 1
   }
-  return requestEpisode(episode_url, known_data)
+  return requestEpisode(episodeUrl, knownData)
 }
 
-export function requestSeries (series_url, known_data = {}, load_more = true) {
+export function requestSeries (seriesUrl, knownData = {}, loadMore = true) {
+  seriesUrl = parseUserUrl(seriesUrl)
   return function (dispatch, getState) {
     dispatch({
-      series_url,
-      known_data,
+      seriesUrl,
+      knownData,
       type: SERIES_LOAD_STARTED
     })
-    setImmediate(() =>
-      loadSeries(series_url).then(function (series_data) {
-        series_data.series_url = series_url
-        dispatch({
-          series_data,
-          series_url,
-          type: SERIES_LOAD_SUCCEEDED
-        })
-        const state = getState()
-        if (!load_more || !state.episodes) {
-          return
-        }
-        series_data.episodes.forEach(function (episode_url, idx, eps) {
-          if (hasNotItem(state.episodes, episode_url)) {
-            dispatch(requestEpisodeFromSeries(episode_url, series_data))
-          }
-        })
-      }).catch(function (error) {
-        dispatch({
-          series_url,
-          error,
-          type: SERIES_LOAD_FAILED
-        })
+    return loadSeries(seriesUrl).then(function (seriesData) {
+      seriesData.seriesUrl = seriesUrl
+      dispatch({
+        seriesData,
+        seriesUrl,
+        type: SERIES_LOAD_SUCCEEDED
       })
-    )
+      const state = getState()
+      if (!loadMore || !state.episodes) {
+        return
+      }
+      seriesData.episodes.forEach(function (episodeUrl, idx, eps) {
+        if (hasNotItem(state.episodes, episodeUrl)) {
+          dispatch(requestEpisodeFromSeries(episodeUrl, seriesData))
+        }
+      })
+    }).catch(function (error) {
+      dispatch({
+        seriesUrl,
+        error,
+        type: SERIES_LOAD_FAILED
+      })
+    })
   }
 }
 
-export function requestEpisodeFromSeries (episode_url, series) {
+export function requestEpisodeFromSeries (episodeUrl, series) {
   return function (dispatch, getState) {
     const knownData = {
-      seriesLink: series.series_url,
-      title: series.episodeNames[episode_url]
+      seriesLink: series.seriesUrl,
+      title: series.episodeNames[episodeUrl]
     }
-    const idx = series.episodes.indexOf(episode_url)
+    const idx = series.episodes.indexOf(episodeUrl)
     if (idx === -1) {
       return
     }
@@ -118,20 +122,50 @@ export function requestEpisodeFromSeries (episode_url, series) {
     if (idx < series.episodes.length - 1) {
       knownData.nextEpisode = series.episodes[idx + 1]
     }
-    dispatch(requestEpisode(episode_url, knownData, false))
+    return dispatch(requestEpisode(episodeUrl, knownData, false))
   }
 }
 
-function hasItem (item_dict, item_key) {
+export function getEpisodeMedia (episodeUrl, quality = false) {
+  // Get the chromecast media object and store it.
+  return (dispatch, getState) => {
+    const episodeData = () => getState().episodes[episodeUrl]
+    const seriesData = () => getState().series[episodeData().seriesLink]
+    const {media, defaultQuality} = episodeData()
+    if (quality === false) {
+      quality = defaultQuality
+    }
+    assert(media.has(quality))
+    dispatch({
+      episodeUrl,
+      type: EPISODE_UPDATE_STARTED
+    })
+    return Promise.resolve().then(() => {
+      // We have a resolved media URL
+      return buildCastMedia(episodeData(), seriesData(), quality)
+    }).then(({resolvedUrl, castMedia}) => {
+      return dispatch({
+        episodeUrl,
+        changedData: {
+          castMedia: episodeData().castMedia.set(quality, castMedia),
+          resolvedMedia: episodeData().resolvedMedia.set(quality, resolvedUrl)
+        },
+        type: EPISODE_UPDATE_SUCCEEDED
+      })
+    }).catch(() => dispatch({episodeUrl, type: EPISODE_LOAD_FAILED}))
+  }
+}
+
+function hasItem (itemDict, itemKey) {
   return (
-    item_dict && item_key && item_dict[item_key] &&
+    itemDict && itemKey && itemDict[itemKey] &&
     (
-      item_dict[item_key].state === 'Loaded' ||
-      item_dict[item_key].state === 'Loading'
+      itemDict[itemKey].state === 'Loaded' ||
+      itemDict[itemKey].state === 'Loading'
     )
   )
 }
 
-function hasNotItem (item_dict, item_key) {
-  return item_dict && item_key && !hasItem(item_dict, item_key)
+function hasNotItem (itemDict, itemKey) {
+  return itemDict && itemKey && !hasItem(itemDict, itemKey)
 }

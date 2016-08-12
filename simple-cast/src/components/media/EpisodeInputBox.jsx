@@ -35,8 +35,8 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch, ownProps) => {
   return {
-    onClick (episode_url) {
-      dispatch(requestEpisode(episode_url))
+    onClick (episodeUrl) {
+      dispatch(requestEpisode(episodeUrl))
     }
   }
 }

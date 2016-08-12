@@ -1,6 +1,6 @@
 // import { List } from 'immutable'
 
-import { kiss_fetch_html } from '../utils/kiss_fetch.jsx'
+import { kissFetchHtml } from '../utils/kiss_fetch'
 import { combineObjectPromises } from '../utils/index.jsx'
 
 function loadSeriesInformation (kissDocument) {
@@ -55,7 +55,7 @@ function loadCoverImage (kissDocument) {
 }
 
 export function loadSeries (seriesUrl) {
-  return kiss_fetch_html(seriesUrl, {
+  return kissFetchHtml(seriesUrl, {
     credentials: 'include'
   }).then(function (kissDocument) {
     return combineObjectPromises(

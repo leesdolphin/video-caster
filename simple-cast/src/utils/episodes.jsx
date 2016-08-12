@@ -1,39 +1,36 @@
 
 export function buildOrderedEpisodeList (episodes, series) {
-  function reducer (episode_url) {
-    const episode = episodes[episode_url]
+  function reducer (episodeUrl) {
+    const episode = episodes[episodeUrl]
     if (episode) {
-      episode_array[episode.number] = episodes[episode_url]
+      episodeArray[episode.number] = episodes[episodeUrl]
       if (episode.nextEpisode) {
         // Indicate there is another episode by filling in with a null.
         // This means we are not loading the episode; but we know it's there.
-        episode_array[episode.number + 1] = episode_array[episode.number + 1]
+        episodeArray[episode.number + 1] = episodeArray[episode.number + 1]
       }
     }
   }
-  const episode_array = []
+  const episodeArray = []
   if (!series) {
-    console.log('Series not given', episode_array)
-    return episode_array
-  } else if (series.series_url && series.episodes) {
+    return episodeArray
+  } else if (series.seriesUrl && series.episodes) {
     // Already got all the series' episodes in order; Just use that.
     // We also know how many episodes there are. So fill out that information too.
-    episode_array.length = series.episodes.length
+    episodeArray.length = series.episodes.length
     series.episodes.forEach(reducer)
-    console.log('Series given', series, episodes, episode_array)
   } else {
-    const series_url = series.series_url || series
-    for (const episode_url in episodes) {
-      if (episodes[episode_url].seriesLink === series_url) {
-        reducer(episode_url)
+    const seriesUrl = series.seriesUrl || series
+    for (const episodeUrl in episodes) {
+      if (episodes[episodeUrl].seriesLink === seriesUrl) {
+        reducer(episodeUrl)
       }
     }
-    console.log('Series URL given', series, episodes, episode_array)
   }
-  for (let i = 0; i < episode_array.length; i++) {
+  for (let i = 0; i < episodeArray.length; i++) {
     // Make the array dense(not sparse) by assigning 'null' to every empty slot.
     //  and leaving the old values where they are.
-    episode_array[i] = episode_array[i]
+    episodeArray[i] = episodeArray[i]
   }
-  return episode_array
+  return episodeArray
 }

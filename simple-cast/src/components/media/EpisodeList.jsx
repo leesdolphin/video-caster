@@ -26,7 +26,7 @@ export const EpisodeListView = React.createClass({
         // We have some data. Let the Episode object handle showing it's state
         // It may have failed; or it may be updating.
         if (previous_type === 'space' || previous_type === null) {
-          const key = `next-ep-btn-${episode.episode_url}`
+          const key = `next-ep-btn-${episode.episodeUrl}`
           // Last one was an space; but now we have an episode. So we'll add a
           //  button to load it.
           rows.push(
@@ -38,7 +38,11 @@ export const EpisodeListView = React.createClass({
         }
         previous_type = 'episode'
         last_episode = episode
-        rows.push(<EpisodeDisplay episode={episode} key={episode.episode_url} />)
+        rows.push(
+          <EpisodeDisplay
+            episodeUrl={episode.episodeUrl}
+            key={episode.episodeUrl} />
+        )
         return
       } else if (episode && episode.state === 'Loading') {
         if (previous_type !== 'loading') {
@@ -51,7 +55,7 @@ export const EpisodeListView = React.createClass({
         if (previous_type === 'episode') {
           // Last one was an episode; now we don't have an episode; we have a gap.
           // Note the `direction` is the URL we want to load next.
-          const key = `prev-ep-btn-${last_episode.episode_url}`
+          const key = `prev-ep-btn-${last_episode.episodeUrl}`
           rows.push(
             <LoadEpisodeButton
               relEpisode={last_episode}
@@ -83,12 +87,12 @@ const seriesSelector = (state) => state.series
 
 const mapStateToProps = createKeyedSelector(
   (state, ownProps) => ownProps.seriesUrl,
-  (series_url) => createSelector(
+  (seriesUrl) => createSelector(
       createSelector(
         episodeSelector,
         createSelector(
           seriesSelector,
-          (series) => series[series_url] || series_url
+          (series) => series[seriesUrl] || seriesUrl
         ),
         buildOrderedEpisodeList
       ),

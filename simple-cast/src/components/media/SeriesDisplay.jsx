@@ -37,6 +37,7 @@ export const SeriesDisplayView = React.createClass({
         <h2 key='title' className='media-heading'>
           {s.title}
           {episodes}
+          <a href={s.seriesUrl} target='_blank' className='heading-link'></a>
         </h2>)
     }
     if (s.state === 'Loading') {
@@ -49,12 +50,12 @@ export const SeriesDisplayView = React.createClass({
         </div>
       )
     }
-    if (s.episodes && s.series_url) {
+    if (s.episodes && s.seriesUrl) {
       if (this.state.showEpisodes) {
         content.push(
           <div key='eps'>
             <button className='btn btn-primary-outline btn-sm' key='eps' onClick={this.toggleEpisodeShow}>Hide Epsiodes</button>
-            <EpisodeList seriesUrl={s.series_url} />
+            <EpisodeList seriesUrl={s.seriesUrl} />
           </div>
         )
       } else {
