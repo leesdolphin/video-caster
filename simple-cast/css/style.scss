@@ -1,6 +1,8 @@
 $enable-flex: true;
-
 @import '../../node_modules/bootstrap/scss/bootstrap';
+
+$fa-font-path:   "/node_modules/font-awesome/fonts";
+@import '../../node_modules/font-awesome/scss/font-awesome';
 
 .indentEpisodeList {
   padding-left: 5px;
@@ -8,10 +10,24 @@ $enable-flex: true;
 }
 
 .errorCard {
-  @include center-block()
+  // @include center-block()
   max-width: 30rem;
 }
 
+h1, h2, h3, h4, h5, h6, {
+  .heading-link {
+    font-size: 50%;
+    @extend .fa;
+    @extend .fa-external-link;
+    color: $gray-light;
+    &:hover {
+      text-decoration: none;
+    }
+  }
+  &:hover .heading-link {
+    color: $link-color;
+  }
+}
 @keyframes react-spinner_spin {
  0% { opacity: 1; }
  100% { opacity: 0.15; }

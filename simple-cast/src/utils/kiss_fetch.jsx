@@ -21,7 +21,14 @@ export class RequestBlockedError extends ExtendableError {
   }
 }
 
-const fetchLimiter = rateLimit(10)
+export class AutomationBlockedError extends ExtendableError {
+  constructor (message, response = null) {
+    super(message)
+    this.response = response
+  }
+}
+
+const fetchLimiter = rateLimit(1, 'fetch(kiss)')
 
 export function checkResponse (response) {
   if (response.ok) {
@@ -58,6 +65,9 @@ export function kissFetch (...args) {
         // and make the user:
         //  Open the tab; wait for the timeout; close the tab; re-request the action
         return Promise.reject(new RequestBlockedError('Blocked.', response))
+      } else if (response.url.includes('/Special/AreYouHuman?')) {
+        return Promise.reject(
+          new AutomationBlockedError('You are human; I am not ... sigh', response))
       } else {
         return response
       }

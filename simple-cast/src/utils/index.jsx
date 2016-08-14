@@ -44,7 +44,7 @@ export function parseUserUrl (url, base = 'about:blank') {
   }
 }
 
-const timeoutFunction = (fn) => window.setTimeout(fn, 100)
+const timeoutFunction = (fn) => window.setTimeout(fn, 500)
 
 export function rateLimit (count, name = '<unknown>') {
   request.pendingQueue = List()
@@ -62,7 +62,7 @@ export function rateLimit (count, name = '<unknown>') {
   let idx = 0
   function request (cb) {
     function wrapper (...args) {
-      const thisNum = idx++;
+      const thisNum = idx++
       let promise
       if (check()) {
         console.log(`Insta-resolving ${thisNum} avaliable in the '${name}' queue`)

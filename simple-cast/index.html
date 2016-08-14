@@ -2,14 +2,24 @@
 <html lang="en">
 <head>
   <meta charset='UTF-8'>
-  <script src="build/index.js"></script>
-  <script src="src/entry.js"></script>
   <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js" async></script>
   <link rel="stylesheet" type="text/css" href="build/styles.css">
   <title>React Build a Hat Rack</title>
 </head>
 
 <body>
-  <div id='container'></div>
+  <div id='container'>
+    Loading ...
+  </div>
+  <script src="../node_modules/requirejs/require.js"></script>
+  <script src="build/index.js"></script>
+  <!-- <script src="build/immutable.js"></script>
+  <script src="build/react.js"></script>
+  <script src="build/react-dom.js"></script>
+  <script src="build/redux.js"></script>
+  <script src="build/redux-thunk.js"></script>
+  <script src="build/react-redux.js"></script>
+  <script src="build/reselect.js"></script> -->
+  <script src="src/entry.js"></script>
 </body>
 </html>

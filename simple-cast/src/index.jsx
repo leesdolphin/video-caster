@@ -18,6 +18,8 @@ import { Main } from './components/root'
 import * as media from './media/index'
 import * as play_queue from './play_queue/index'
 
+import ChromecastSessionManager from './CastManager'
+
 const api_available_reducer = function (state = false, event) {
   switch (event.type) {
     case chromecast_events.API_AVAILABLE:
@@ -215,24 +217,27 @@ const animationFrameMiddleware = function () {
 
 function entrypoint (domElm) {
   const middleware = [
-    animationFrameMiddleware(),
-    castSender(
-      'CC1AD845', // AppId - chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID
-      'urn:x-cast:com.google.cast.media' // namespace for communication (namespace must match on receiver)
-    ),
-    castMediaManager(),
+    // animationFrameMiddleware(),
+    // castSender(
+    //   'CC1AD845', // AppId - chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID
+    //   'urn:x-cast:com.google.cast.media' // namespace for communication (namespace must match on receiver)
+    // ),
+    // castMediaManager(),
     createLogger({duration: true, collapsed: true, logErrors: false})
   ]
   const store = createStore(reducer, applyMiddleware(thunk, ...middleware))
-  setInterval(() => {
-    if (store.getState()['media']) {
-      store.getState()['media'].getStatus(null, () => {
-        console.log(arguments)
-      }, () => {
-        console.log(arguments)
-      })
-    }
-  }, 1000)
+  // setInterval(() => {
+  //   if (store.getState()['media']) {
+  //     store.getState()['media'].getStatus(null, () => {
+  //       console.log(arguments)
+  //     }, () => {
+  //       console.log(arguments)
+  //     })
+  //   }
+  // }, 1000)
+
+  const sessionManager = new ChromecastSessionManager()
+  sessionManager.initializeCastPlayer()
   return () => {
     ReactDOM.render(
       (<Provider store={store}>

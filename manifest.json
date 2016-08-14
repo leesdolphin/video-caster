@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
 
-  "name": "Getting started example",
-  "description": "This extension shows a Google Image search result for the current page",
+  "name": "KissAnime and KissCartoon Caster",
+  "description": "Automatically plays KissCartoon and KissAnime shows on your Google ChromeCast.",
   "version": "1.0",
 
   "browser_action": {
@@ -11,7 +11,8 @@
   },
   "permissions": [
     "activeTab",
-    "https://*/"
+    "https://*/",
+    "http://kisscartoon.me/"
   ],
   "content_security_policy": "script-src 'self' https://www.gstatic.com; object-src 'self'"
 }

@@ -16,7 +16,7 @@ export const MainView = React.createClass({
       <div className='row'>
         <div className='col-xs-12 col-md-8 col-md-push-2'>
           <h1>
-            Welcome @{' '} 
+            Welcome @{' '}
           </h1>
           <p className='lead'>
             Something Something darkside

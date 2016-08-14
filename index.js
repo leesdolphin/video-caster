@@ -79,7 +79,7 @@ var playback_media_promise = new Promise(function (purl_resolve, purl_reject) {
         metadata.images = []  // Images is kinda-hard to get(needs another request.)
         mediaInfo.metadata = metadata
         mediaInfo.customData = {
-          'episode_url': kiss_url
+          'episodeUrl': kiss_url
         }
         return mediaInfo
       })
