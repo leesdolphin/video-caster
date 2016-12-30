@@ -51,6 +51,15 @@ export const EpisodeListView = React.createClass({
           const key = `spinner-${spacer_id++}`
           rows.push(<LoadingSpinner key={key}/>)
         }
+      } else if (episode && episode.state === 'Pending') {
+        // Don't show multiple loading spinners next to each other.
+        previous_type = 'episode'
+        const key = `load-btn-${spacer_id++}`
+        rows.push(
+          <LoadEpisodeButton
+            relEpisode={episode}
+            direction='thisEpisode'
+            key={key} />)
       } else {
         if (previous_type === 'episode') {
           // Last one was an episode; now we don't have an episode; we have a gap.

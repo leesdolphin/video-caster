@@ -44,6 +44,7 @@ const externals = {}
 const config = {
   context: __dirname,
   entry: {
+    'kiss-getter': [path.resolve(__dirname, 'simple-cast/src/kiss-getter/index.coffee')],
     'index': [path.resolve(__dirname, 'simple-cast/src/index.jsx')],
     // This is a mess; the `styles.js` file that is generated from the
     // entry below is basically empty(apart from the UMD entry)
@@ -64,17 +65,21 @@ const config = {
     externals
   ],
   resolve: {
-    extensions: ['', '.jsx', '.json', '.js', '.css', '.scss']
+    extensions: ['', '.coffee', '.jsx', '.json', '.js', '.css', '.scss']
   },
   devtool: '#source-map',
   module: {
     loaders: [{
+      test: /\.coffee$/,
+      exclude: /(node_modules|bower_components)/,
+      loader: 'coffee'
+    }, {
       test: /\.jsx?$/, // A regexp to test the require path. accepts either js or jsx
       exclude: /(node_modules|bower_components)/,
       loader: 'babel', // The module to load. 'babel' is short for 'babel-loader'
       query: {
         cacheDirectory: true,
-        presets: ['react'],
+        presets: ['react', 'stage-2'],
         plugins: ['babel-plugin-transform-es2015-modules-amd']
       }
     }, {
@@ -86,11 +91,15 @@ const config = {
   postcss: function () {
     return [autoprefixer]
   },
-  cache: '.webpack.cache.json',
   plugins: [
-    new ExtractTextPlugin('[name].css'),
-    new webpack.optimize.OccurrenceOrderPlugin(),
+    new ExtractTextPlugin('[name].css', {
+      allChunks: true
+    }),
     new CopyWebpackPlugin(coppies, {}),
+    new webpack.optimize.DedupePlugin(),
+    new webpack.optimize.OccurenceOrderPlugin(true),
+    new webpack.optimize.AggressiveMergingPlugin({moveToParents: true}),
+    // new webpack.optimize.UglifyJsPlugin(),
     // new ConcatWebpackPlugin(concat),
     // new webpack.optimize.UglifyJsPlugin({
     //   mangle: false,

@@ -24,6 +24,12 @@ h1, h2, h3, h4, h5, h6, {
       text-decoration: none;
     }
   }
+  .refresh-icon {
+    font-size: 50%;
+    color: $gray-light;
+    @extend .fa;
+    @extend .fa-refresh;
+  }
   &:hover .heading-link {
     color: $link-color;
   }

@@ -19,7 +19,12 @@
     "babel-core": "^6.5.2",
     "babel-loader": "^6.2.3",
     "babel-plugin-transform-es2015-modules-amd": "^6.8.0",
+    "babel-polyfill": "^6.3.14",
+    "babel-preset-modern-node": "^2.1.0",
     "babel-preset-react": "^6.5.0",
+    "babel-preset-stage-2": "^6.5.0",
+    "coffee-loader": "^0.7.2",
+    "coffee-script": "^1.10.0",
     "copy-webpack-plugin": "^2.1.4",
     "css-loader": "^0.23.1",
     "eslint": "^2.2.0",
@@ -62,6 +67,9 @@
   },
   "dependencies": {
     "almond": "^0.3.2",
+    "babel-polyfill": "^6.13.0",
+    "babel-preset-modern-node": "^2.3.0",
+    "babel-preset-stage-2": "^6.13.0",
     "bootstrap": "^4.0.0-alpha.3",
     "crypto-js": "^3.1.6",
     "font-awesome": "^4.6.1",
@@ -72,8 +80,13 @@
     "react-redux": "^4.4.2",
     "redux": "^3.4.0",
     "redux-logger": "^2.6.1",
+    "redux-storage": "^4.1.1",
+    "redux-storage-decorator-immutablejs": "^1.0.2",
+    "redux-storage-engine-localstorage": "^1.1.2",
     "redux-thunk": "^2.0.1",
-    "reselect": "^2.5.1"
+    "requirejs": "^2.2.0",
+    "reselect": "^2.5.1",
+    "uglify-js": "git://github.com/mishoo/UglifyJS2.git#harmony"
   },
   "entries": {}
 }

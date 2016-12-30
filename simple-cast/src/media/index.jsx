@@ -146,7 +146,7 @@ export function getEpisodeMedia (episodeUrl, quality = false) {
     }).then(({resolvedUrl, castMedia}) => {
       return dispatch({
         episodeUrl,
-        changedData: {
+        episodeData: {
           castMedia: episodeData().castMedia.set(quality, castMedia),
           resolvedMedia: episodeData().resolvedMedia.set(quality, resolvedUrl)
         },

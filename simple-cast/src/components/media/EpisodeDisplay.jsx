@@ -6,7 +6,7 @@ import { createSelector } from 'reselect'
 import { createKeyedSelector } from '../../utils/cache'
 
 import { addEpisode } from '../../play_queue/index'
-import { getEpisodeMedia } from '../../media/index'
+import { getEpisodeMedia, requestEpisode } from '../../media/index'
 
 import { LoadingSpinner } from '../generic/LoadingSpinner.jsx'
 import { ErrorRender } from '../generic/ErrorRender.jsx'
@@ -15,7 +15,8 @@ export const EpisodeDisplayView = React.createClass({
   propTypes: {
     episode: PropTypes.object.isRequired,
     addEpisodeToQueue: PropTypes.func.isRequired,
-    resolveMedia: PropTypes.func.isRequired
+    resolveMedia: PropTypes.func.isRequired,
+    reloadEpisode: PropTypes.func.isRequired
   },
   render () {
     const e = this.props.episode
@@ -39,10 +40,12 @@ export const EpisodeDisplayView = React.createClass({
           {e.title}
           <small>{` (No. ${e.number + 1})`}</small>
           <a href={e.episodeUrl} target='_blank' className='heading-link'></a>
+          <button className='btn btn-sm' onClick={this.props.reloadEpisode}>
+            <span className='refresh-icon' />
+          </button>
         </h3>
         <div>{'Watch Now '}
           <a href={e.media.get(e.defaultQuality)}>{`in ${e.defaultQuality}`}</a>
-          // <button onClick={this.props.resolveMedia}>Resolve Media</button>
         </div>
         {extras}
       </div>
@@ -77,6 +80,9 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     },
     resolveMedia () {
       dispatch(getEpisodeMedia(ownProps.episodeUrl))
+    },
+    reloadEpisode () {
+      dispatch(requestEpisode(ownProps.episodeUrl, ownProps.episode, false))
     }
   }
 }

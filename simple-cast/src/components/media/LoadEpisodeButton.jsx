@@ -12,6 +12,10 @@ export const LoadEpisodeButtonView = React.createClass({
   onClick () {
     const ep = this.props.relEpisode
     const dir = this.props.direction
+    if (dir === 'thisEpisode') {
+      this.props.loadEpisode(ep.episodeUrl, ep)
+      return
+    }
     const requestedUrl = this.props.relEpisode[dir]
     if (!requestedUrl) {
       return null
@@ -35,17 +39,23 @@ export const LoadEpisodeButtonView = React.createClass({
   },
   render () {
     const dir = this.props.direction
-    const requestedUrl = this.props.relEpisode[dir]
-    if (!requestedUrl) {
-      return <span />
-    }
-    let btnText = ''
-    if (dir === 'prevEpisode') {
-      btnText = 'Get Previous Episode'
-    } else if (dir === 'nextEpisode') {
-      btnText = 'Get Next Episode'
+    let requestedUrl
+    let btnText
+    if (dir === 'thisEpisode') {
+      requestedUrl = this.props.relEpisode.episodeUrl
+      btnText = `Get Episode ${this.props.relEpisode.number}`
     } else {
-      return <span />
+      requestedUrl = this.props.relEpisode[dir]
+      if (!requestedUrl) {
+        return <span />
+      }
+      if (dir === 'prevEpisode') {
+        btnText = 'Get Previous Episode'
+      } else if (dir === 'nextEpisode') {
+        btnText = 'Get Next Episode'
+      } else {
+        return <span />
+      }
     }
     return <button className='btn btn-primary-outline' onClick={this.onClick}>{btnText}</button>
   }

@@ -61,34 +61,35 @@ export function rateLimit (count, name = '<unknown>') {
   }
   let idx = 0
   function request (cb) {
-    function wrapper (...args) {
-      const thisNum = idx++
-      let promise
-      if (check()) {
-        console.log(`Insta-resolving ${thisNum} avaliable in the '${name}' queue`)
-        promise = Promise.resolve().then(() => cb(...args))
-        request.inProgressQueue = request.inProgressQueue.push(promise)
-      } else {
-        console.log(`Queued Promise ${thisNum} in the '${name}' queue`)
-        const queuedPromise = new Promise((resolve) => {
-          request.pendingQueue = request.pendingQueue.push(resolve)
-        })
-        promise = queuedPromise.then(() => {
-          request.inProgressQueue = request.inProgressQueue.push(promise)
-          return cb(...args)
-        })
-        timeoutFunction(execNext)
-      }
-      function resolvedFn () {
-        console.log(`${thisNum} Promise Completed for the '${name}' queue`)
-        request.inProgressQueue = request.inProgressQueue.delete(
-          request.inProgressQueue.indexOf(promise))
-        timeoutFunction(execNext)
-      }
-      promise.then(resolvedFn, resolvedFn)
-      return promise
-    }
-    return wrapper
+    // function wrapper (...args) {
+    //   const thisNum = idx++
+    //   let promise
+    //   if (check()) {
+    //     console.log(`Insta-resolving ${thisNum} avaliable in the '${name}' queue`)
+    //     promise = Promise.resolve().then(() => cb(...args))
+    //     request.inProgressQueue = request.inProgressQueue.push(promise)
+    //   } else {
+    //     console.log(`Queued Promise ${thisNum} in the '${name}' queue`)
+    //     const queuedPromise = new Promise((resolve) => {
+    //       request.pendingQueue = request.pendingQueue.push(resolve)
+    //     })
+    //     promise = queuedPromise.then(() => {
+    //       request.inProgressQueue = request.inProgressQueue.push(promise)
+    //       return cb(...args)
+    //     })
+    //     timeoutFunction(execNext)
+    //   }
+    //   function resolvedFn () {
+    //     console.log(`${thisNum} Promise Completed for the '${name}' queue`)
+    //     request.inProgressQueue = request.inProgressQueue.delete(
+    //       request.inProgressQueue.indexOf(promise))
+    //     timeoutFunction(execNext)
+    //   }
+    //   promise.then(resolvedFn, resolvedFn)
+    //   return promise
+    // }
+    return cb
+    // return wrapper
   }
   request.Promise = (fn) => request(fn)()
   return request
