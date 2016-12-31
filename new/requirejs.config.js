@@ -12,8 +12,11 @@ const config = {
       location: '../node_modules/immutable/dist/',
       main: 'immutable.min',
     },
-
   ],
+  paths: {
+    chromecast: 'amd-loaders/chromecast',
+    domReady: '../node_modules/requirejs-domready/domReady'
+  },
 };
 
 if (typeof requirejs === 'function') {
