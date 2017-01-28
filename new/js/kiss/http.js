@@ -22,7 +22,7 @@ define(['./exceptions'], (exceptions) => {
   }
 
   function fetchHtmlPage(url, opts = { credentials: 'include' }) {
-    return this.fetchPage(url, opts).then(response =>
+    return fetchPage(url, opts).then(response =>
       response.text().then((responseText) => {
         const doc = (new window.DOMParser()).parseFromString(responseText, 'text/html');
         const newBase = doc.createElement('base');

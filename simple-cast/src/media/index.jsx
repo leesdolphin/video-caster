@@ -1,8 +1,10 @@
 import assert from 'assert'
 
-import { loadEpisode, buildCastMedia } from './episode-loader.jsx'
-import { loadSeries } from './series-loader.jsx'
-import { parseUserUrl } from '../utils/index'
+const loadEpisode = require('../../../new/js/kiss/episodes')
+const buildCastMedia = require('../../../new/js/cast/media')
+const loadSeries = require('../../../new/js/kiss/series')
+const dbStorage = require('../../../new/js/kiss/storage/indexedDb')
+const kUtils = require('../../../new/js/kiss/utils')
 
 export const EPISODE_LOAD_STARTED = 'kiss.media.episode.load.start'
 export const EPISODE_LOAD_FAILED = 'kiss.media.episode.load.fail'
@@ -72,7 +74,7 @@ export function requestEpisodeRel (episodeUrl, anotherEpisodesData) {
 }
 
 export function requestSeries (seriesUrl, knownData = {}, loadMore = true) {
-  seriesUrl = parseUserUrl(seriesUrl)
+  seriesUrl = kUtils.parseUserUrl(seriesUrl)
   return function (dispatch, getState) {
     dispatch({
       seriesUrl,

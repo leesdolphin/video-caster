@@ -3,7 +3,7 @@ define(['crypto-js'], (CryptoJS) => {
   class KissDecryptor {
     constructor(
       aesInitVector = CryptoJS.enc.Hex.parse('a5e8d2e9c1721ae0e84ad660c472c1f3'),
-      keyUrl = 'http://kisscartoon.me/External/RSK',
+      keyUrl = 'http://kisscartoon.se/External/RSK',
     ) {
       this.aesInitVector = aesInitVector;
       this.keyPromise = window.fetch(keyUrl, { method: 'POST', credentials: 'include' })

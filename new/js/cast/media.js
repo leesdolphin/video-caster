@@ -1,5 +1,5 @@
 
-define(['chromecast!media', 'kiss/media'], (ccMedia, resolveMediaUrl) => {
+define([/* 'chromecast!media', */'kiss/media'], (/*ccMedia, */resolveMediaUrl) => {
   function buildCastMedia(episode, series, quality) {
     const { resolvedMedia, media } = episode;
     return Promise.resolve(
@@ -14,18 +14,18 @@ define(['chromecast!media', 'kiss/media'], (ccMedia, resolveMediaUrl) => {
       const resolvedUrl = response.url;
       return { contentType, resolvedUrl };
     }).then(({ contentType, resolvedUrl }) => {
-      const metadata = new ccMedia.TvShowMediaMetadata();
+      const metadata = new chrome.cast.media.TvShowMediaMetadata();
       metadata.episode = episode.number;
       metadata.title = episode.title;
       metadata.seriesTitle = series.title;
       metadata.images = [series.coverImage];
 
-      const castMedia = new ccMedia.MediaInfo(resolvedUrl, contentType);
+      const castMedia = new chrome.cast.media.MediaInfo(resolvedUrl, contentType);
       castMedia.metadata = metadata;
       castMedia.customData = {
         episodeUrl: episode.episodeUrl,
       };
-      return castMedia;
+      return { resolvedUrl, castMedia };
     });
   }
 

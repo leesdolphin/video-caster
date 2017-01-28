@@ -12,7 +12,8 @@
   "permissions": [
     "activeTab",
     "https://*/",
-    "http://kisscartoon.me/"
+    "http://kisscartoon.me/",
+    "http://kisscartoon.se/"
   ],
   "content_security_policy": "script-src 'self' https://www.gstatic.com; object-src 'self'"
 }

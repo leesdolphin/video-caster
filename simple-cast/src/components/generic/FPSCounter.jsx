@@ -1,7 +1,5 @@
 import React from 'react'
 
-import { List } from 'immutable'
-
 export const FPSCounter = React.createClass({
   slowFrame: 1000 / 30,
   hideAfterFrames: 60 * 2.5,
@@ -25,7 +23,7 @@ export const FPSCounter = React.createClass({
 
       }
       // let frameTimes = this.state.frameTimes
-      // if (frameTimes.size > 60) {  // 1 Second of 'perfect' frames.
+      // if (frameTimes.length > 60) {  // 1 Second of 'perfect' frames.
       //   frameTimes = frameTimes.pop().unshift(msBetweenFrames)
       // } else {
       //   frameTimes = frameTimes.unshift(msBetweenFrames)
@@ -50,7 +48,7 @@ export const FPSCounter = React.createClass({
   },
   getInitialState () {
     return {
-      frameTimes: List(),
+      frameTimes: [],
       slowFrame: false,
       timeSinceSlow: false
     }
@@ -58,12 +56,12 @@ export const FPSCounter = React.createClass({
   render () {
     const frameTimes = this.state.frameTimes
     let shortFps, longFps
-    if (frameTimes.size) {
+    if (frameTimes.length) {
       // const shortTimes = frameTimes.splice(5)
       // let shortMs, longMs
-      // shortMs = shortTimes.reduce((a, b) => a + b, 0) / shortTimes.size
+      // shortMs = shortTimes.reduce((a, b) => a + b, 0) / shortTimes.length
       // shortFps = shortMs ? Math.floor(1000 / shortMs) : 0
-      // longMs = frameTimes.reduce((a, b) => a + b, 0) / (frameTimes.size)
+      // longMs = frameTimes.reduce((a, b) => a + b, 0) / (frameTimes.length)
       // longFps = longMs ? Math.floor(1000 / longMs) : 0
     } else {
       shortFps = longFps = 0

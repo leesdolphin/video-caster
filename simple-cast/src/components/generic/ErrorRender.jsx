@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react'
 
-import { RequestBlockedError } from '../../utils/kiss_fetch'
+import { RequestBlockedError } from 'kiss/exceptions'
 
 const URL = window.URL
 

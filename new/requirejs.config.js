@@ -7,15 +7,16 @@ const config = {
       location: '../node_modules/crypto-js',
       main: 'index',
     },
-    {
-      name: 'immutable',
-      location: '../node_modules/immutable/dist/',
-      main: 'immutable.min',
-    },
   ],
   paths: {
     chromecast: 'amd-loaders/chromecast',
-    domReady: '../node_modules/requirejs-domready/domReady'
+    domReady: '../node_modules/requirejs-domready/domReady',
+    idb: '../node_modules/idb/lib/idb',
+  },
+  shim: {
+    idb: {
+      init: () => window.idb,
+    },
   },
 };
 

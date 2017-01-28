@@ -3,69 +3,62 @@ import ReactDOM from 'react-dom'
 
 import {createStore, applyMiddleware, combineReducers} from 'redux'
 import { Provider } from 'react-redux'
-import createLogger from 'redux-logger'
 import thunk from 'redux-thunk'
 
 import * as storage from 'redux-storage'
 import createEngine from 'redux-storage-engine-localstorage'
-import immutablejs from 'redux-storage-decorator-immutablejs'
 
 import {castSender, castMediaManager} from './react-redux-chromecast-sender'
-import * as chromecast_events from './react-redux-chromecast-sender/constants'
-
-import { List, Map, fromJS } from 'immutable'
-
-import { swapImmutableList } from './utils/index'
-import { kissDecrypt } from './utils/kiss_decrypt'
+import * as chromecastEvents from './react-redux-chromecast-sender/constants'
 
 import { Main } from './components/root'
 import * as media from './media/index'
-import * as play_queue from './play_queue/index'
+import * as playQueue from './play_queue/index'
 
 import { ChromecastSessionManager } from './CastManager'
 
-const api_available_reducer = function (state = false, event) {
+const apiAvailableReducer = function (state = false, event) {
   switch (event.type) {
-    case chromecast_events.API_AVAILABLE:
-    case chromecast_events.API_UNAVAILABLE:
-      return event.type === chromecast_events.API_AVAILABLE
+    case chromecastEvents.API_AVAILABLE:
+    case chromecastEvents.API_UNAVAILABLE:
+      return event.type === chromecastEvents.API_AVAILABLE
     default:
       return state
   }
 }
-const dicovering_reducer = function (state = false, event) {
+const dicoveringReducer = function (state = false, event) {
   switch (event.type) {
-    case chromecast_events.DISCOVERING:
+    case chromecastEvents.DISCOVERING:
       return true
-    case chromecast_events.RECEIVER_AVAILABLE:
-    case chromecast_events.RECEIVER_UNAVAILABLE:
+    case chromecastEvents.RECEIVER_AVAILABLE:
+    case chromecastEvents.RECEIVER_UNAVAILABLE:
       return false
     default:
       return state
   }
 }
-const session_reducer = function (state = false, event) {
+const sessionReducer = function (state = false, event) {
   switch (event.type) {
-    case chromecast_events.SESSION_CONNECTED:
+    case chromecastEvents.SESSION_CONNECTED:
       return event.session
-    case chromecast_events.SESSION_DISCONNECTED:
+    case chromecastEvents.SESSION_DISCONNECTED:
       return false
     default:
       return state
   }
 }
-const media_reducer = function (state = false, event) {
+const mediaReducer = function (state = false, event) {
   switch (event.type) {
-    case chromecast_events.MEDIA_LOADED:
-    case chromecast_events.MEDIA_STATUS_UPDATED:
+    case chromecastEvents.MEDIA_LOADED:
+    case chromecastEvents.MEDIA_STATUS_UPDATED:
       return event.media
-    case chromecast_events.SESSION_DISCONNECTED:
+    case chromecastEvents.SESSION_DISCONNECTED:
       return false
     default:
       return state
   }
 }
-function episodes_reducer (state = {}, event) {
+function episodesReducer (state = {}, event) {
   const newState = Object.assign({}, state)
   switch (event.type) {
     case media.EPISODE_LOAD_STARTED:
@@ -121,7 +114,7 @@ function episodes_reducer (state = {}, event) {
   }
 }
 
-function series_reducer (state = {}, event) {
+function seriesReducer (state = {}, event) {
   const newState = Object.assign({}, state)
   switch (event.type) {
     case media.SERIES_LOAD_STARTED:
@@ -202,41 +195,40 @@ function series_reducer (state = {}, event) {
   }
 }
 
-function playQueueReducer (state = List(), event) {
-  if (!List.isList(state)) {
-    state = List(state)
-  }
+function playQueueReducer (state = [], event) {
+  const newState = Array.from(state)
   switch (event.type) {
-    case play_queue.ADD_EPISODE:
-      const episodes = List([event.episodeUrl])
-      return state.concat(episodes)
-    case play_queue.REMOVE_EPISODE:
+    case playQueue.ADD_EPISODE:
+      const episodes = Array.from([event.episodeUrl])
+      newState.push(episodes)
+      return newState
+    case playQueue.REMOVE_EPISODE:
       const index = event.index || 0
-      return state.remove(index)
-    case play_queue.REORDER_EPISODES:
-      return swapImmutableList(state, Map(event.swapedIndexes))
+      newState.splice(index, 1)
+      return newState
+    case playQueue.REORDER_EPISODES:
+      throw Error('*void screaming*')
   }
   return state
 }
 
 const reducer = combineReducers({
-  api_available: api_available_reducer,
-  session: session_reducer,
-  media: media_reducer,
-  discovering: dicovering_reducer,
-  episodes: episodes_reducer,
-  series: series_reducer,
+  api_available: apiAvailableReducer,
+  session: sessionReducer,
+  media: mediaReducer,
+  discovering: dicoveringReducer,
+  episodes: episodesReducer,
+  series: seriesReducer,
   playQueue: playQueueReducer
 })
-
 
 const mediaQueueLoaderMiddleware = function () {
   return ({dispatch, getState}) => (next) => (action) => {
     // console.log(action)
     let re = null
     switch (action.type) {
-      case play_queue.ADD_EPISODE:
-      case play_queue.REORDER_EPISODES:
+      case playQueue.ADD_EPISODE:
+      case playQueue.REORDER_EPISODES:
       case 'REDUX_STORAGE_LOAD':
         re = next(action)
         break
@@ -256,39 +248,7 @@ const mediaQueueLoaderMiddleware = function () {
   }
 }
 
-
-const animationFrameMiddleware = function () {
-  return ({dispatch, getState}) => (next) => {
-    let frameRequest = null
-    let actionList = List()
-    function animFrame (startTime) {
-      // Don't start anything 5 milliseconds before the end of a 60FPS frame.
-      const finishBy = startTime + (1000 / 60) - 5
-      while (actionList.size && window.performance.now() < finishBy) {
-        // While we have time and items
-        const item = actionList.first()
-        actionList = actionList.shift()
-        next(item)
-      }
-      frameRequest = requestNext()
-    }
-    function requestNext () {
-      if (actionList.size) {
-        return window.requestAnimationFrame(animFrame)
-      } else {
-        return null
-      }
-    }
-    return (action) => {
-      actionList = actionList.push(action)
-      if (!frameRequest) {
-        frameRequest = requestNext()
-      }
-    }
-  }
-}
-
-const EPISODE_IM_JS_KEYS = ['media', 'castMedia', 'resolvedMedia']
+const EPISODE_MAP_JS_KEYS = ['media', 'castMedia', 'resolvedMedia']
 
 const episodeLoader = (engine) => {
   return {
@@ -297,8 +257,12 @@ const episodeLoader = (engine) => {
       return engine.load().then(function (result) {
         if (result['episodes']) {
           Object.values(result['episodes']).forEach((ep) => {
-            EPISODE_IM_JS_KEYS.forEach((key) => {
-              ep[key] = fromJS(ep[key])
+            EPISODE_MAP_JS_KEYS.forEach((key) => {
+              if (key.length === undefined) {
+                ep[key] = new Map([])
+              } else {
+                ep[key] = new Map(ep[key] || [])
+              }
             })
             if (ep['state'] !== 'Loaded') {
               ep['state'] = 'Pending'
@@ -315,12 +279,7 @@ const episodeLoader = (engine) => {
 }
 
 const engine = episodeLoader(
-  immutablejs(
-    createEngine('my-save-key'),
-    [
-      ['playQueue']
-    ]
-  )
+  createEngine('my-save-key')
 )
 
 function entrypoint (domElm) {
@@ -348,8 +307,8 @@ function entrypoint (domElm) {
   //   }
   // }, 1000)
 
-  // const sessionManager = new ChromecastSessionManager()
-  // sessionManager.initializeCastPlayer()
+  const sessionManager = new ChromecastSessionManager()
+  sessionManager.initializeCastPlayer()
   return () => {
     ReactDOM.render(
       (<Provider store={store}>

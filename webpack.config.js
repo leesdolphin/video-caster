@@ -44,7 +44,10 @@ const externals = {}
 const config = {
   context: __dirname,
   entry: {
-    'kiss-getter': [path.resolve(__dirname, 'simple-cast/src/kiss-getter/index.coffee')],
+    'kiss-getter': [
+      path.resolve(__dirname, 'simple-cast/src/kiss-getter/index.coffee'),
+      path.resolve(__dirname, 'new/js/kiss/')
+    ],
     'index': [path.resolve(__dirname, 'simple-cast/src/index.jsx')],
     // This is a mess; the `styles.js` file that is generated from the
     // entry below is basically empty(apart from the UMD entry)

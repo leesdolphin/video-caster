@@ -1,7 +1,5 @@
 /* global URL: false */
 
-import { List } from 'immutable'
-
 export function combineObjectPromises (...promises) {
   return Promise.all(promises).then((promiseResults) => {
     return Object.assign({}, ...promiseResults)
@@ -44,22 +42,22 @@ export function parseUserUrl (url, base = 'about:blank') {
   }
 }
 
-const timeoutFunction = (fn) => window.setTimeout(fn, 500)
+// const timeoutFunction = (fn) => window.setTimeout(fn, 500)
 
 export function rateLimit (count, name = '<unknown>') {
-  request.pendingQueue = List()
-  request.inProgressQueue = List()
-  const check = () => request.inProgressQueue.size < count
-  function execNext () {
-    if (request.pendingQueue.size === 0 || !check()) {
-      return
-    }
-    console.log(`Resolving the first item in the '${name}' queue`)
-    const resolver = request.pendingQueue.first()
-    request.pendingQueue = request.pendingQueue.shift()
-    resolver()
-  }
-  let idx = 0
+  request.pendingQueue = []
+  request.inProgressQueue = []
+  // const check = () => request.inProgressQueue.size < count
+  // function execNext () {
+  //   if (request.pendingQueue.size === 0 || !check()) {
+  //     return
+  //   }
+  //   console.log(`Resolving the first item in the '${name}' queue`)
+  //   const resolver = request.pendingQueue.first()
+  //   request.pendingQueue = request.pendingQueue.shift()
+  //   resolver()
+  // }
+  // let idx = 0
   function request (cb) {
     // function wrapper (...args) {
     //   const thisNum = idx++

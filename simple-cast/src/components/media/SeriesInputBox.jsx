@@ -8,7 +8,8 @@ export const SeriesInputBoxView = React.createClass({
     onClick: PropTypes.func.isRequired
   },
   getInitialState () {
-    return {value: 'http://kisscartoon.me/Cartoon/Steven-Universe-Season-02'}
+    // return {value: 'http://kisscartoon.se/Cartoon/Steven-Universe-Season-4'}
+    return {value: 'http://kisscartoon.se/Cartoon/The-Lego-Movie-2014'};
   },
   handleChange (event) {
     this.setState({value: event.target.value})

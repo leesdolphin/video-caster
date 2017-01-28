@@ -47,7 +47,7 @@ export const PlayQueueItemView = React.createClass({
 const episodesSelector = (state) => state.episodes
 
 const mapStateToProps = createKeyedSelector(
-  (state, ownProps) => state.playQueue.get(ownProps.queueIndex),  // EpURL from queue.
+  (state, ownProps) => state.playQueue[ownProps.queueIndex],  // EpURL from queue.
   (episodeUrl) => createSelector(
       createSelector(
         episodesSelector,

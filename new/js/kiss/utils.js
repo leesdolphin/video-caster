@@ -1,6 +1,4 @@
 define(['crypto-js'], (CryptoJS) => {
-  // TODO: others
-
   function parseUserUrl(url, base = 'about:blank') {
     try {
       return new URL(url, base).href;
@@ -12,6 +10,7 @@ define(['crypto-js'], (CryptoJS) => {
       }
     }
   }
+
   function combineObjectPromises(...promises) {
     return Promise.all(promises).then(
       promiseResults => Object.assign({}, ...promiseResults));

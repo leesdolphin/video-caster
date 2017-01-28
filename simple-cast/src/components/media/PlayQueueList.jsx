@@ -7,7 +7,7 @@ import { PlayQueueItem } from './PlayQueueItem'
 
 export const PlayQueueListView = React.createClass({
   propTypes: {
-    queuedEpisodeUrls: PropTypes.object.isRequired
+    queuedEpisodeUrls: PropTypes.array.isRequired
   },
   render: function () {
     const rows = []
